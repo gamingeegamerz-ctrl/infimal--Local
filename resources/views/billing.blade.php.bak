@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Campaigns - InfiMal</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .neon-glow-primary {
+             box-shadow: 0 0 8px rgba(43, 124, 238, 0.5), 0 0 20px rgba(43, 124, 238, 0.3);
+        }
+        .soft-shadow {
+            box-shadow: 0px 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 25s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(5vw); opacity: 0; }
+        }
+        .campaign-status-draft { background-color: rgba(107, 114, 128, 0.2); color: #9CA3AF; }
+        .campaign-status-scheduled { background-color: rgba(59, 130, 246, 0.2); color: #60A5FA; }
+        .campaign-status-active { background-color: rgba(34, 197, 94, 0.2); color: #4ADE80; }
+        .campaign-status-completed { background-color: rgba(139, 92, 246, 0.2); color: #A855F7; }
+        .campaign-status-paused { background-color: rgba(245, 158, 11, 0.2); color: #FBBF24; }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-white/90">
+    <div class="relative min-h-screen w-full overflow-hidden">
+        <!-- Particle Background -->
+        <div class="absolute inset-0 z-0">
+            <div class="particle" style="width: 5px; height: 5px; left: 10%; animation-duration: 20s; animation-delay: -5s;"></div>
+            <div class="particle" style="width: 3px; height: 3px; left: 25%; animation-duration: 30s; animation-delay: -2s;"></div>
+            <div class="particle" style="width: 6px; height: 6px; left: 40%; animation-duration: 18s; animation-delay: -10s;"></div>
+            <div class="particle" style="width: 4px; height: 4px; left: 60%; animation-duration: 28s; animation-delay: -7s;"></div>
+            <div class="particle" style="width: 7px; height: 7px; left: 75%; animation-duration: 22s; animation-delay: -15s;"></div>
+            <div class="particle" style="width: 3px; height: 3px; left: 90%; animation-duration: 35s; animation-delay: -3s;"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-[#0a192f] via-[#020c1b] to-[#020c1b]"></div>
+        </div>
+        
+        <div class="relative z-10 flex h-full min-h-screen">
+            <!-- SideNavBar -->
+            <nav class="flex-shrink-0 w-64 p-4">
+                <div class="flex flex-col h-full gap-4">
+                    <div class="flex items-center gap-3 p-2">
+                        <div class="p-2 rounded-full bg-primary/20 text-primary">
+                            <span class="material-symbols-outlined">all_inbox</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <h1 class="text-white text-base font-bold leading-normal">InfiMal</h1>
+                            <p class="text-white/60 text-sm font-normal leading-normal">Email Management</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2 mt-4">
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-white/70" href="{{ route('dashboard') }}">
+                            <span class="material-symbols-outlined">dashboard</span>
+                            <p class="text-sm font-medium leading-normal">Dashboard</p>
+                        </a>
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-white/70" href="{{ route('subscribers') }}">
+                            <span class="material-symbols-outlined">group</span>
+                            <p class="text-sm font-medium leading-normal">Subscribers</p>
+                        </a>
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-white/70" href="{{ route('lists') }}">
+                            <span class="material-symbols-outlined">list_alt</span>
+                            <p class="text-sm font-medium leading-normal">Lists</p>
+                        </a>
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-white" href="{{ route('campaigns') }}">
+                            <span class="material-symbols-outlined text-white">campaign</span>
+                            <p class="text-sm font-medium leading-normal">Campaigns</p>
+                        </a>
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 text-white/70" href="{{ route('messages') }}">
+                            <span class="material-symbols-outlined">chat</span>
+                            <p class="text-sm font-medium leading-normal">Messages</p>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="flex-1 flex flex-col p-6 overflow-y-auto">
+                <!-- TopNavBar -->
+                <header class="flex-shrink-0 glass-card rounded-xl px-6 py-3 sticky top-6 z-20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-8">
+                            <label class="flex flex-col w-72">
+                                <div class="flex w-full flex-1 items-stretch rounded-lg h-10">
+                                    <div class="text-white/60 flex bg-transparent items-center justify-center pl-3">
+                                        <span class="material-symbols-outlined">search</span>
+                                    </div>
+                                    <input id="searchInput" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-white focus:outline-0 focus:ring-0 border-none bg-transparent h-full placeholder:text-white/60 px-2 text-base font-normal leading-normal" placeholder="Search campaigns by name..." value=""/>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="flex flex-1 justify-end gap-4 items-center">
+                            <button onclick="showTemplateModal()" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-white/10 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-white/20 transition-colors">
+                                <span class="material-symbols-outlined mr-2">description</span>
+                                <span class="truncate">Templates</span>
+                            </button>
+                            <button onclick="showScheduleModal()" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-white/10 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-white/20 transition-colors">
+                                <span class="material-symbols-outlined mr-2">schedule</span>
+                                <span class="truncate">Schedule</span>
+                            </button>
+                            <button onclick="showCreateCampaignModal()" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+                                <span class="material-symbols-outlined mr-2">add</span>
+                                <span class="truncate">New Campaign</span>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Hero Section -->
+                <div class="relative my-8 glass-card rounded-xl p-8 overflow-hidden soft-shadow">
+                    <div class="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/30 rounded-full filter blur-3xl opacity-50"></div>
+                    <div class="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-[#a855f7]/30 rounded-full filter blur-3xl opacity-50"></div>
+                    <div class="relative z-10 flex items-center justify-between">
+                        <div>
+                            <h1 class="text-white tracking-light text-3xl font-bold leading-tight">Email Campaigns</h1>
+                            <p class="text-white/70 text-base font-normal leading-normal pt-2">Create, manage, and track your email marketing campaigns.</p>
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="flex items-center gap-6">
+                                <div class="text-center">
+                                    <p class="text-white/60 text-sm">Total Campaigns</p>
+                                    <p class="text-white text-2xl font-bold">{{ $totalCampaigns }}</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-white/60 text-sm">Active</p>
+                                    <p class="text-green-400 text-2xl font-bold">{{ $activeCampaigns }}</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-white/60 text-sm">Scheduled</p>
+                                    <p class="text-blue-400 text-2xl font-bold">{{ $scheduledCampaigns }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaign Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="glass-card rounded-xl p-6 soft-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-white/60 text-sm">Total Sent</p>
+                                <p class="text-white text-2xl font-bold">{{ number_format($totalSent) }}</p>
+                            </div>
+                            <span class="material-symbols-outlined text-primary text-3xl">send</span>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-xl p-6 soft-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-white/60 text-sm">Open Rate</p>
+                                <p class="text-white text-2xl font-bold">{{ $avgOpenRate }}%</p>
+                            </div>
+                            <span class="material-symbols-outlined text-green-400 text-3xl">visibility</span>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-xl p-6 soft-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-white/60 text-sm">Click Rate</p>
+                                <p class="text-white text-2xl font-bold">{{ $avgClickRate }}%</p>
+                            </div>
+                            <span class="material-symbols-outlined text-blue-400 text-3xl">click</span>
+                        </div>
+                    </div>
+                    <div class="glass-card rounded-xl p-6 soft-shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-white/60 text-sm">Bounce Rate</p>
+                                <p class="text-white text-2xl font-bold">{{ $avgBounceRate }}%</p>
+                            </div>
+                            <span class="material-symbols-outlined text-red-400 text-3xl">warning</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters and Actions -->
+                <div class="glass-card rounded-xl p-4 mb-6 soft-shadow">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <select id="statusFilter" onchange="filterCampaigns()" class="bg-white/10 border-none text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary">
+                                <option value="all">All Status</option>
+                                <option value="draft">Draft</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="active">Active</option>
+                                <option value="paused">Paused</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                            
+                            <select id="typeFilter" onchange="filterCampaigns()" class="bg-white/10 border-none text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary">
+                                <option value="all">All Types</option>
+                                <option value="newsletter">Newsletter</option>
+                                <option value="promotional">Promotional</option>
+                                <option value="transactional">Transactional</option>
+                                <option value="automated">Automated</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <button onclick="selectAll()" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm">
+                                Select All
+                            </button>
+                            <button onclick="bulkDelete()" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
+                                Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campaigns Table -->
+                <div class="glass-card rounded-xl p-6 soft-shadow">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-white/80">
+                            <thead>
+                                <tr class="border-b border-white/20">
+                                    <th class="py-3 px-4 text-left w-8">
+                                        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th class="py-3 px-4 text-left">Campaign Name</th>
+                                    <th class="py-3 px-4 text-left">Status</th>
+                                    <th class="py-3 px-4 text-left">Type</th>
+                                    <th class="py-3 px-4 text-left">List</th>
+                                    <th class="py-3 px-4 text-left">Progress</th>
+                                    <th class="py-3 px-4 text-left">Sent/Total</th>
+                                    <th class="py-3 px-4 text-left">Open Rate</th>
+                                    <th class="py-3 px-4 text-left">Click Rate</th>
+                                    <th class="py-3 px-4 text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="campaignsTableBody">
+                                @foreach($campaigns as $campaign)
+                                <tr class="border-b border-white/10 hover:bg-white/5 transition-colors">
+                                    <td class="py-3 px-4">
+                                        <input type="checkbox" value="{{ $campaign->id }}" onchange="toggleCampaignSelection({{ $campaign->id }})">
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <span class="material-symbols-outlined text-primary">campaign</span>
+                                            <div>
+                                                <p class="text-white font-medium">{{ $campaign->name }}</p>
+                                                <p class="text-white/60 text-sm">{{ $campaign->created_at->format('M d, Y') }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="px-2 py-1 rounded-full text-xs campaign-status-{{ $campaign->status }}">
+                                            {{ ucfirst($campaign->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-purple-500/20 text-purple-400">
+                                            {{ ucfirst($campaign->type) }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">{{ $campaign->list->name ?? 'All Lists' }}</td>
+                                    <td class="py-3 px-4">
+                                        <div class="w-24 bg-white/10 rounded-full h-2">
+                                            <div class="bg-primary h-2 rounded-full" style="width: {{ $campaign->progress }}%"></div>
+                                        </div>
+                                        <span class="text-white/60 text-xs mt-1 block">{{ $campaign->progress }}%</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="text-white">{{ number_format($campaign->sent_count) }}</span>
+                                        <span class="text-white/60">/</span>
+                                        <span class="text-white/60">{{ number_format($campaign->total_recipients) }}</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="text-green-400 font-medium">{{ $campaign->open_rate }}%</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="text-blue-400 font-medium">{{ $campaign->click_rate }}%</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <div class="flex items-center gap-2">
+                                            @if($campaign->status === 'draft')
+                                                <button onclick="editCampaign({{ $campaign->id }})" class="text-blue-400 hover:text-blue-300" title="Edit">
+                                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                                </button>
+                                                <button onclick="launchCampaign({{ $campaign->id }})" class="text-green-400 hover:text-green-300" title="Launch">
+                                                    <span class="material-symbols-outlined text-sm">play_arrow</span>
+                                                </button>
+                                            @elseif($campaign->status === 'scheduled')
+                                                <button onclick="viewCampaign({{ $campaign->id }})" class="text-blue-400 hover:text-blue-300" title="View">
+                                                    <span class="material-symbols-outlined text-sm">visibility</span>
+                                                </button>
+                                                <button onclick="cancelCampaign({{ $campaign->id }})" class="text-red-400 hover:text-red-300" title="Cancel">
+                                                    <span class="material-symbols-outlined text-sm">cancel</span>
+                                                </button>
+                                            @elseif($campaign->status === 'active')
+                                                <button onclick="viewCampaign({{ $campaign->id }})" class="text-blue-400 hover:text-blue-300" title="View">
+                                                    <span class="material-symbols-outlined text-sm">visibility</span>
+                                                </button>
+                                                <button onclick="pauseCampaign({{ $campaign->id }})" class="text-yellow-400 hover:text-yellow-300" title="Pause">
+                                                    <span class="material-symbols-outlined text-sm">pause</span>
+                                                </button>
+                                            @else
+                                                <button onclick="viewCampaign({{ $campaign->id }})" class="text-blue-400 hover:text-blue-300" title="View">
+                                                    <span class="material-symbols-outlined text-sm">visibility</span>
+                                                </button>
+                                                <button onclick="duplicateCampaign({{ $campaign->id }})" class="text-purple-400 hover:text-purple-300" title="Duplicate">
+                                                    <span class="material-symbols-outlined text-sm">content_copy</span>
+                                                </button>
+                                            @endif
+                                            <button onclick="deleteCampaign({{ $campaign->id }})" class="text-red-400 hover:text-red-300" title="Delete">
+                                                <span class="material-symbols-outlined text-sm">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-white/20">
+                        <div class="text-white/60 text-sm">
+                            Showing {{ $campaigns->firstItem() }} to {{ $campaigns->lastItem() }} of {{ $campaigns->total() }} campaigns
+                        </div>
+                        <div class="flex gap-2">
+                            @if($campaigns->onFirstPage())
+                                <span class="px-3 py-1 bg-white/10 rounded opacity-50">Previous</span>
+                            @else
+                                <a href="{{ $campaigns->previousPageUrl() }}" class="px-3 py-1 bg-white/10 hover:bg-white/20 rounded transition-colors">Previous</a>
+                            @endif
+                            
+                            <span class="px-3 py-1 bg-primary/20 rounded">
+                                Page {{ $campaigns->currentPage() }}
+                            </span>
+                            
+                            @if($campaigns->hasMorePages())
+                                <a href="{{ $campaigns->nextPageUrl() }}" class="px-3 py-1 bg-white/10 hover:bg-white/20 rounded transition-colors">Next</a>
+                            @else
+                                <span class="px-3 py-1 bg-white/10 rounded opacity-50">Next</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="glass-card rounded-xl p-6 soft-shadow">
+                        <h3 class="text-white font-bold text-lg mb-4">Campaign Performance</h3>
+                        <canvas id="performanceChart" width="400" height="250"></canvas>
+                    </div>
+                    <div class="glass-card rounded-xl p-6 soft-shadow">
+                        <h3 class="text-white font-bold text-lg mb-4">Engagement Rates</h3>
+                        <canvas id="engagementChart" width="400" height="250"></canvas>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Create Campaign Modal -->
+    <div id="createCampaignModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="glass-card rounded-xl p-6 w-96 soft-shadow">
+            <h3 class="text-white text-xl font-bold mb-4">Create New Campaign</h3>
+            <form id="createCampaignForm" action="{{ route('campaigns.store') }}" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-white/80 text-sm block mb-2">Campaign Name *</label>
+                        <input type="text" name="name" required class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label class="text-white/80 text-sm block mb-2">Campaign Type</label>
+                        <select name="type" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="newsletter">Newsletter</option>
+                            <option value="promotional">Promotional</option>
+                            <option value="transactional">Transactional</option>
+                            <option value="automated">Automated</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-white/80 text-sm block mb-2">Email List</label>
+                        <select name="list_id" class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">All Lists</option>
+                            @foreach($lists as $list)
+                                <option value="{{ $list->id }}">{{ $list->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-white/80 text-sm block mb-2">Subject Line *</label>
+                        <input type="text" name="subject" required class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="hideCreateCampaignModal()" class="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg transition-colors">
+                        Create Campaign
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal Functions
+        function showCreateCampaignModal() {
+            document.getElementById('createCampaignModal').classList.remove('hidden');
+        }
+
+        function hideCreateCampaignModal() {
+            document.getElementById('createCampaignModal').classList.add('hidden');
+        }
+
+        function showTemplateModal() {
+            alert('Template modal would open here');
+        }
+
+        function showScheduleModal() {
+            alert('Schedule modal would open here');
+        }
+
+        // Campaign Management Functions
+        let selectedCampaigns = new Set();
+
+        function toggleCampaignSelection(id) {
+            if (selectedCampaigns.has(id)) {
+                selectedCampaigns.delete(id);
+            } else {
+                selectedCampaigns.add(id);
+            }
+        }
+
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][value]');
+            const selectAll = document.getElementById('selectAllCheckbox').checked;
+            
+            selectedCampaigns.clear();
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll;
+                if (selectAll) {
+                    selectedCampaigns.add(parseInt(checkbox.value));
+                }
+            });
+        }
+
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][value]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+                selectedCampaigns.add(parseInt(checkbox.value));
+            });
+        }
+
+        function bulkDelete() {
+            if (selectedCampaigns.size === 0) {
+                alert('Please select campaigns to delete.');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete ${selectedCampaigns.size} campaigns?`)) {
+                fetch("{{ route('campaigns.bulk-delete') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        ids: Array.from(selectedCampaigns)
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting campaigns.');
+                    }
+                });
+            }
+        }
+
+        function editCampaign(id) {
+            window.location.href = "{{ route('campaigns.edit', '') }}/" + id;
+        }
+
+        function viewCampaign(id) {
+            window.location.href = "{{ route('campaigns.show', '') }}/" + id;
+        }
+
+        function launchCampaign(id) {
+            if (confirm('Are you sure you want to launch this campaign?')) {
+                fetch("{{ route('campaigns.launch', '') }}/" + id, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error launching campaign.');
+                    }
+                });
+            }
+        }
+
+        function pauseCampaign(id) {
+            if (confirm('Are you sure you want to pause this campaign?')) {
+                fetch("{{ route('campaigns.pause', '') }}/" + id, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error pausing campaign.');
+                    }
+                });
+            }
+        }
+
+        function cancelCampaign(id) {
+            if (confirm('Are you sure you want to cancel this campaign?')) {
+                fetch("{{ route('campaigns.cancel', '') }}/" + id, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error canceling campaign.');
+                    }
+                });
+            }
+        }
+
+        function duplicateCampaign(id) {
+            if (confirm('Are you sure you want to duplicate this campaign?')) {
+                fetch("{{ route('campaigns.duplicate', '') }}/" + id, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error duplicating campaign.');
+                    }
+                });
+            }
+        }
+
+        function deleteCampaign(id) {
+            if (confirm('Are you sure you want to delete this campaign?')) {
+                fetch("{{ route('campaigns.destroy', '') }}/" + id, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error deleting campaign.');
+                    }
+                });
+            }
+        }
+
+        // Search functionality
+        document.getElementById('searchInput')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#campaignsTableBody tr');
+            
+            rows.forEach(row => {
+                const name = row.cells[1].textContent.toLowerCase();
+                const shouldShow = name.includes(searchTerm);
+                row.style.display = shouldShow ? '' : 'none';
+            });
+        });
+
+        function filterCampaigns() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const rows = document.querySelectorAll('#campaignsTableBody tr');
+            
+            rows.forEach(row => {
+                const status = row.cells[2].textContent.trim().toLowerCase();
+                const type = row.cells[3].textContent.trim().toLowerCase();
+                
+                const statusMatch = statusFilter === 'all' || status === statusFilter;
+                const typeMatch = typeFilter === 'all' || type === typeFilter;
+                
+                row.style.display = statusMatch && typeMatch ? '' : 'none';
+            });
+        }
+
+        // Initialize Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            new Chart(performanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Emails Sent',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        backgroundColor: '#2b7cee',
+                        borderColor: '#2b7cee',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: 'white' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // Engagement Chart
+            const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+            new Chart(engagementCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Open Rate',
+                        data: [45, 52, 48, 55, 58, 62],
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Click Rate',
+                        data: [12, 15, 14, 18, 16, 20],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: 'white' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

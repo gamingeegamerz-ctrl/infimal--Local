@@ -1,0 +1,11 @@
+[0;1;31m×[0m mysql.service - MySQL Community Server
+     Loaded: loaded (]8;;file://infimal.site/usr/lib/systemd/system/mysql.service/usr/lib/systemd/system/mysql.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;31mfailed[0m (Result: exit-code) since Sat 2025-11-29 11:33:08 UTC; 1min 7s ago
+   Main PID: 743845 (code=exited, status=1/FAILURE)
+     Status: "[0;1;36mServer shutdown complete[0m"
+        CPU: 506ms
+
+Nov 29 11:33:08 infimal.site systemd[1]: mysql.service: Scheduled restart job, restart counter is at 5.
+Nov 29 11:33:08 infimal.site systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmysql.service: Start request repeated too quickly.[0m
+Nov 29 11:33:08 infimal.site systemd[1]: [0;1;38;5;185m[0;1;39m[0;1;38;5;185mmysql.service: Failed with result 'exit-code'.[0m
+Nov 29 11:33:08 infimal.site systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start mysql.service - MySQL Community Server.[0m

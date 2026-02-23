@@ -1,0 +1,190 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\SubscriberController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\ProfileController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Public Routes
+Route::get('/', function () {
+    return view('public.index');
+})->name('home');
+
+// Static Pages
+Route::get('/pricing', function () {
+    return view('pricing');
+})->name('pricing');
+
+Route::get('/features', function () {
+    return view('features');
+})->name('features');
+
+Route::get('/contact', function () {
+    return view('contact');
+})->name('contact');
+
+Route::get('/about', function () {
+    return view('about');
+})->name('about');
+
+Route::get('/blog', function () {
+    return view('blog');
+})->name('blog');
+
+Route::get('/careers', function () {
+    return view('careers');
+})->name('careers');
+
+Route::get('/privacy', function () {
+    return view('privacy');
+})->name('privacy');
+
+Route::get('/terms', function () {
+    return view('terms');
+})->name('terms');
+
+Route::get('/security', function () {
+    return view('security');
+})->name('security');
+
+Route::get('/help-center', function () {
+    return view('help-center');
+})->name('help.center');
+
+// Authentication Routes (Public)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+    
+    // Google OAuth Routes
+    Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.login');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
+});
+
+// Logout Route
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Payment Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/payment', [PaymentController::class, 'showPaymentPage'])->name('payment');
+    Route::post('/payment/create-checkout', [PaymentController::class, 'createCheckout'])->name('payment.create');
+    Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+});
+
+// Webhook route (CSRF se exempt)
+Route::post('/webhook/paddle', [PaymentController::class, 'handleWebhook'])
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+
+// Protected Routes (Require Authentication AND Payment)
+Route::middleware(['auth'])->group(function () {
+    
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+    
+    // Campaigns Routes
+    Route::prefix('campaigns')->group(function () {
+        Route::get('/', [CampaignController::class, 'index'])->name('campaigns.index');
+        Route::get('/create', [CampaignController::class, 'create'])->name('campaigns.create');
+        Route::post('/', [CampaignController::class, 'store'])->name('campaigns.store');
+        Route::get('/{id}', [CampaignController::class, 'show'])->name('campaigns.show');
+        Route::get('/{id}/edit', [CampaignController::class, 'edit'])->name('campaigns.edit');
+        Route::put('/{id}', [CampaignController::class, 'update'])->name('campaigns.update');
+        Route::delete('/{id}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
+        Route::post('/{id}/send', [CampaignController::class, 'send'])->name('campaigns.send');
+        Route::get('/{id}/preview', [CampaignController::class, 'preview'])->name('campaigns.preview');
+        Route::get('/{id}/analytics', [CampaignController::class, 'analytics'])->name('campaigns.analytics');
+        Route::get('/{id}/duplicate', [CampaignController::class, 'duplicate'])->name('campaigns.duplicate');
+    });
+    
+    // Subscribers Routes
+    Route::prefix('subscribers')->group(function () {
+        Route::get('/', [SubscriberController::class, 'index'])->name('subscribers.index');
+        Route::get('/create', [SubscriberController::class, 'create'])->name('subscribers.create');
+        Route::post('/', [SubscriberController::class, 'store'])->name('subscribers.store');
+        Route::get('/{id}', [SubscriberController::class, 'show'])->name('subscribers.show');
+        Route::get('/{id}/edit', [SubscriberController::class, 'edit'])->name('subscribers.edit');
+        Route::put('/{id}', [SubscriberController::class, 'update'])->name('subscribers.update');
+        Route::delete('/{id}', [SubscriberController::class, 'destroy'])->name('subscribers.destroy');
+        Route::post('/import', [SubscriberController::class, 'import'])->name('subscribers.import');
+        Route::get('/export', [SubscriberController::class, 'export'])->name('subscribers.export');
+        Route::post('/{id}/unsubscribe', [SubscriberController::class, 'unsubscribe'])->name('subscribers.unsubscribe');
+    });
+    
+    // Analytics Routes
+    Route::prefix('analytics')->group(function () {
+        Route::get('/', [AnalyticsController::class, 'index'])->name('analytics.index');
+        Route::get('/campaigns', [AnalyticsController::class, 'campaigns'])->name('analytics.campaigns');
+        Route::get('/subscribers', [AnalyticsController::class, 'subscribers'])->name('analytics.subscribers');
+        Route::get('/reports', [AnalyticsController::class, 'reports'])->name('analytics.reports');
+    });
+    
+    // Templates & Automation
+    Route::get('/templates', function() { 
+        return view('templates'); 
+    })->name('templates');
+    
+    Route::get('/automation', function() { 
+        return view('automation'); 
+    })->name('automation');
+    
+    // Settings
+    Route::get('/settings', [ProfileController::class, 'settings'])->name('settings');
+    Route::post('/settings/update', [ProfileController::class, 'updateSettings'])->name('settings.update');
+});
+
+// Email Tracking Routes (Public - for email opens/clicks)
+Route::get('/track/open/{campaign_id}/{subscriber_id}', [CampaignController::class, 'trackOpen'])->name('track.open');
+Route::get('/track/click/{campaign_id}/{subscriber_id}/{url}', [CampaignController::class, 'trackClick'])->name('track.click');
+Route::get('/unsubscribe/{subscriber_id}', [SubscriberController::class, 'unsubscribe'])->name('unsubscribe');
+
+// API Routes for AJAX calls
+Route::prefix('api')->group(function () {
+    Route::get('/campaign-stats', [AnalyticsController::class, 'getCampaignStats'])->name('api.campaign-stats');
+    Route::get('/subscriber-stats', [AnalyticsController::class, 'getSubscriberStats'])->name('api.subscriber-stats');
+    Route::get('/user-stats', [DashboardController::class, 'getUserStats'])->name('api.user-stats');
+});
+
+// Test Routes (Remove in production)
+if (app()->environment('local')) {
+    Route::get('/test/email', function () {
+        return view('emails.test');
+    });
+    
+    Route::get('/test/payment', function () {
+        return view('payment-test');
+    });
+}
+
+// Health Check
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'OK',
+        'timestamp' => now(),
+        'php_version' => PHP_VERSION,
+        'laravel_version' => app()->version(),
+        'environment' => app()->environment()
+    ]);
+});
+
+// Fallback Route (Keep this last)
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});

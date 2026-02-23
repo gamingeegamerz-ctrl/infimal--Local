@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::table('subscribers', function (Blueprint $table) {
+            // Add source column if missing
+            if (!Schema::hasColumn('subscribers', 'source')) {
+                $table->string('source')->default('manual')->after('status');
+            }
+            
+            // Add subscribed_at column if missing
+            if (!Schema::hasColumn('subscribers', 'subscribed_at')) {
+                $table->timestamp('subscribed_at')->nullable()->after('source');
+            }
+            
+            // Add unsubscribed_at column if missing
+            if (!Schema::hasColumn('subscribers', 'unsubscribed_at')) {
+                $table->timestamp('unsubscribed_at')->nullable()->after('subscribed_at');
+            }
+        });
+    }
+
+    public function down()
+    {
+        Schema::table('subscribers', function (Blueprint $table) {
+            // Remove columns if needed
+            $table->dropColumn(['source', 'subscribed_at', 'unsubscribed_at']);
+        });
+    }
+};

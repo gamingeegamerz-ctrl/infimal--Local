@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Subscriber;
+
+class SubscriberController extends Controller
+{
+    public function index()
+    {
+        // Simple try-catch to prevent white screen
+        try {
+            $subscribers = Subscriber::paginate(10);
+            
+            // Simple data array
+            $data = [
+                'subscribers' => $subscribers,
+                'totalSubscribers' => $subscribers->total(),
+                'activeSubscribers' => Subscriber::where('status', 'active')->count(),
+                'unsubscribed' => Subscriber::where('status', 'unsubscribed')->count(),
+                'growthRate' => 0,
+                'activePercentage' => 0,
+                'todayCount' => 0,
+                'weekCount' => 0
+            ];
+            
+            return view('subscribers.index', $data);
+            
+        } catch (\Exception $e) {
+            // If error, show simple page
+            return response()->view('subscribers.error', [
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    // Keep other methods minimal
+    public function create() { return view('subscribers.create'); }
+    public function store(Request $request) { 
+        Subscriber::create($request->validate(['email' => 'required|email|unique:subscribers']));
+        return redirect()->route('subscribers.index');
+    }
+    public function show($id) { return view('subscribers.show', ['subscriber' => Subscriber::find($id)]); }
+    public function edit($id) { return view('subscribers.edit', ['subscriber' => Subscriber::find($id)]); }
+    public function update(Request $request, $id) { 
+        Subscriber::find($id)->update($request->all());
+        return redirect()->route('subscribers.index');
+    }
+    public function destroy($id) { 
+        Subscriber::destroy($id);
+        return redirect()->route('subscribers.index');
+    }
+}

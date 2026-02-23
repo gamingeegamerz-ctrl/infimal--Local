@@ -1,0 +1,1 @@
+<!DOCTYPE html><html><head><title>Security</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50 min-h-screen flex items-center justify-center"><div class="text-center"><h1 class="text-4xl font-bold mb-4">Security</h1><p>Our security practices</p><a href="/" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Go Home</a></div></body></html>

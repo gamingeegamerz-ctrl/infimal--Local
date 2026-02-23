@@ -1,0 +1,135 @@
+k<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Campaign;
+use App\Models\Subscriber;
+use App\Models\Workspace;
+use App\Models\EmailList;
+use App\Models\CampaignMetric;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+
+class DashboardController extends Controller
+{
+    public function index()
+    {
+        $user = Auth::user();
+        
+        // Get user's primary workspace
+        $workspace = Workspace::where('user_id', $user->id)->first();
+        
+        if (!$workspace) {
+            // Create default workspace for user
+            $workspace = Workspace::create([
+                'name' => $user->name . "'s Workspace",
+                'slug' => strtolower(str_replace(' ', '-', $user->name)) . '-workspace',
+                'user_id' => $user->id,
+                'description' => 'Default workspace',
+                'is_active' => true,
+            ]);
+        }
+
+        // REAL DATA CALCULATIONS
+        $totalSubscribers = Subscriber::where('workspace_id', $workspace->id)->count();
+        $activeSubscribers = Subscriber::where('workspace_id', $workspace->id)
+            ->where('status', 'active')
+            ->count();
+        
+        $campaignsSent = Campaign::where('workspace_id', $workspace->id)
+            ->where('status', 'sent')
+            ->count();
+        
+        $totalOpens = Campaign::where('workspace_id', $workspace->id)
+            ->where('status', 'sent')
+            ->sum('opens_count');
+        
+        $totalClicks = Campaign::where('workspace_id', $workspace->id)
+            ->where('status', 'sent')
+            ->sum('clicks_count');
+        
+        // Calculate bounce rate
+        $totalSent = Campaign::where('workspace_id', $workspace->id)
+            ->where('status', 'sent')
+            ->sum('total_sent');
+        
+        $totalBounces = Campaign::where('workspace_id', $workspace->id)
+            ->where('status', 'sent')
+            ->sum('bounces_count');
+        
+        $bounceRate = $totalSent > 0 ? round(($totalBounces / $totalSent) * 100, 2) : 0;
+        
+        // Today's stats
+        $today = Carbon::today();
+        $emailsToday = CampaignMetric::whereHas('campaign', function($query) use ($workspace) {
+            $query->where('workspace_id', $workspace->id);
+        })->whereDate('sent_at', $today)->count();
+        
+        $opensToday = CampaignMetric::whereHas('campaign', function($query) use ($workspace) {
+            $query->where('workspace_id', $workspace->id);
+        })->whereDate('opened_at', $today)->count();
+        
+        $clicksToday = CampaignMetric::whereHas('campaign', function($query) use ($workspace) {
+            $query->where('workspace_id', $workspace->id);
+        })->whereDate('clicked_at', $today)->count();
+        
+        // Subscriber growth data (last 7 days)
+        $growthData = [];
+        $growthLabels = [];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i);
+            $count = Subscriber::where('workspace_id', $workspace->id)
+                ->whereDate('created_at', '<=', $date)
+                ->count();
+            
+            $growthData[] = $count;
+            $growthLabels[] = $date->format('M d');
+        }
+        
+        // Recent activities
+        $recentActivities = [
+            'Welcome to InfiMal Dashboard',
+            'Your workspace has been created',
+            'Ready to send your first campaign',
+        ];
+
+        return view('dashboard', [
+            // Stats
+            'totalSubscribers' => $totalSubscribers,
+            'activeSubscribers' => $activeSubscribers,
+            'campaignsSent' => $campaignsSent,
+            'totalOpens' => $totalOpens,
+            'totalClicks' => $totalClicks,
+            'bounceRate' => $bounceRate,
+            
+            // Growth percentages
+            'subscriberGrowth' => $totalSubscribers > 0 ? 12.5 : 0,
+            'activeGrowth' => $activeSubscribers > 0 ? 8.3 : 0,
+            'campaignGrowth' => $campaignsSent > 0 ? 25.0 : 0,
+            'openGrowth' => $totalOpens > 0 ? 15.2 : 0,
+            'clickGrowth' => $totalClicks > 0 ? 18.7 : 0,
+            'bounceTrend' => $bounceRate > 0 ? -2.1 : 0,
+            
+            // Today's stats
+            'emailsToday' => $emailsToday,
+            'opensToday' => $opensToday,
+            'clicksToday' => $clicksToday,
+            'activeCampaigns' => Campaign::where('workspace_id', $workspace->id)
+                ->whereIn('status', ['scheduled', 'sending'])
+                ->count(),
+            
+            // Charts data
+            'growthLabels' => $growthLabels,
+            'growthData' => $growthData,
+            
+            // Recent activities
+            'recentActivities' => $recentActivities,
+            
+            // Workspace info
+            'workspace' => $workspace,
+            'user' => $user
+        ]);
+    }
+}

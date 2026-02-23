@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     * Add html_content and plain_text fields to campaigns
+     */
+    public function up(): void
+    {
+        Schema::table('campaigns', function (Blueprint $table) {
+            if (!Schema::hasColumn('campaigns', 'html_content')) {
+                $table->longText('html_content')->nullable()->after('content');
+            }
+            if (!Schema::hasColumn('campaigns', 'plain_text')) {
+                $table->longText('plain_text')->nullable()->after('html_content');
+            }
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('campaigns', function (Blueprint $table) {
+            $table->dropColumn(['html_content', 'plain_text']);
+        });
+    }
+};
