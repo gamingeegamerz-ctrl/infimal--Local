@@ -75,7 +75,7 @@ class SendCampaignEmailJob implements ShouldQueue
         Config::set('mail.mailers.smtp.encryption', $smtp->encryption === 'none' ? null : $smtp->encryption);
         Config::set('mail.mailers.smtp.username', $smtp->username);
         Config::set('mail.mailers.smtp.password', $smtp->password);
-        Config::set('mail.from.address', $smtp->from_email ?: $emailJob->from_email);
+        Config::set('mail.from.address', $smtp->from_address ?: $emailJob->from_email);
         Config::set('mail.from.name', $smtp->from_name ?: $emailJob->from_name);
 
         try {

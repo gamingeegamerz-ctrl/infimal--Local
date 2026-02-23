@@ -12,11 +12,12 @@ class SmtpService
     {
         $smtp ??= new SMTPAccount();
         $smtp->user_id = $userId;
+        $smtp->name = $data['name'] ?? $smtp->name ?? 'SMTP';
         $smtp->host = $data['host'];
         $smtp->port = (int) $data['port'];
         $smtp->username = $data['username'];
         $smtp->encryption = $data['encryption'];
-        $smtp->from_email = $data['from_email'] ?? $data['username'];
+        $smtp->from_address = $data['from_address'] ?? $data['username'];
         $smtp->from_name = $data['from_name'] ?? null;
         $smtp->daily_limit = (int) ($data['daily_limit'] ?? 500);
         $smtp->per_minute_limit = (int) ($data['per_minute_limit'] ?? 30);
@@ -46,7 +47,7 @@ class SmtpService
         Config::set('mail.mailers.smtp.encryption', $smtp->encryption === 'none' ? null : $smtp->encryption);
         Config::set('mail.mailers.smtp.username', $smtp->username);
         Config::set('mail.mailers.smtp.password', $smtp->password);
-        Config::set('mail.from.address', $smtp->from_email);
+        Config::set('mail.from.address', $smtp->from_address);
         Config::set('mail.from.name', $smtp->from_name ?: 'InfiMal');
 
         try {

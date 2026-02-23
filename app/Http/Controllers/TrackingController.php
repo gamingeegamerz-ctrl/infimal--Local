@@ -3,45 +3,46 @@
 namespace App\Http\Controllers;
 
 use App\Models\EmailLog;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class TrackingController extends Controller
 {
-    public function trackOpenById(int $id)
+    public function openById(int $id): Response
     {
-        EmailLog::where('id', $id)->update(['opened' => true]);
+        EmailLog::whereKey($id)->update(['opened' => true]);
 
         return $this->pixel();
     }
 
-    public function trackClickById(Request $request, int $id)
+    public function clickById(Request $request, int $id): RedirectResponse
     {
-        EmailLog::where('id', $id)->update(['clicked' => true]);
+        EmailLog::whereKey($id)->update(['clicked' => true]);
 
-        $url = $request->query('url', '/');
+        $url = (string) $request->query('url', '/');
 
         return redirect()->away($url);
     }
 
-    // Backward compatibility with existing query-string links
-    public function trackOpen(Request $request)
+    // Backward-compatible endpoints used by existing links/routes
+    public function trackOpen(Request $request): Response
     {
-        if ($request->query('id')) {
-            return $this->trackOpenById((int) $request->query('id'));
+        if ($request->filled('id')) {
+            return $this->openById((int) $request->query('id'));
         }
 
         return $this->pixel();
     }
 
-    public function trackClick(Request $request)
+    public function trackClick(Request $request): RedirectResponse
     {
-        if ($request->query('id')) {
-            return $this->trackClickById($request, (int) $request->query('id'));
+        if ($request->filled('id')) {
+            return $this->clickById($request, (int) $request->query('id'));
         }
 
         return redirect($request->query('url', '/'));
     }
-
 
     public function trackBounce(Request $request)
     {
@@ -53,7 +54,7 @@ class TrackingController extends Controller
         return response('You have been unsubscribed.', 200);
     }
 
-    private function pixel()
+    private function pixel(): Response
     {
         $pixel = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Zr90AAAAASUVORK5CYII=');
 
@@ -75,6 +76,7 @@ class TrackingController extends Controller
         return preg_replace_callback('/<a\s+([^>]*href=["\']([^"\']+)["\'][^>]*)>/i', function ($matches) use ($logId) {
             $originalUrl = $matches[2];
             $trackingUrl = url('/track/click/' . $logId . '?url=' . urlencode($originalUrl));
+
             return str_replace($originalUrl, $trackingUrl, $matches[0]);
         }, $htmlContent) ?? $htmlContent;
     }

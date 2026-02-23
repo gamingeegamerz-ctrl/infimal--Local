@@ -11,10 +11,10 @@ class SMTPAccount extends Model
 
     protected $fillable = [
         'user_id',
-        'host',
-        'port',
-        'username',
-        'password_encrypted',
+        'smtp_host',
+        'smtp_port',
+        'smtp_username',
+        'smtp_password',
         'encryption',
         'from_email',
         'from_name',
@@ -23,9 +23,15 @@ class SMTPAccount extends Model
         'warmup_enabled',
         'is_default',
         'is_active',
+        // compatibility aliases
+        'host',
+        'port',
+        'username',
+        'password',
+        'from_address',
     ];
 
-    protected $hidden = ['password_encrypted'];
+    protected $hidden = ['smtp_password', 'password_encrypted'];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -33,24 +39,80 @@ class SMTPAccount extends Model
         'warmup_enabled' => 'boolean',
         'daily_limit' => 'integer',
         'per_minute_limit' => 'integer',
+        'smtp_port' => 'integer',
     ];
 
-    public function setPasswordAttribute(string $password): void
+    public function setSmtpPasswordAttribute(?string $password): void
     {
-        $this->attributes['password_encrypted'] = Crypt::encryptString($password);
+        if ($password === null || $password === '') {
+            return;
+        }
+
+        $this->attributes['smtp_password'] = Crypt::encryptString($password);
     }
 
-    public function getPasswordAttribute(): ?string
+    public function getSmtpPasswordAttribute($value): ?string
     {
-        if (!$this->password_encrypted) {
+        if (!$value) {
             return null;
         }
 
         try {
-            return Crypt::decryptString($this->password_encrypted);
+            return Crypt::decryptString($value);
         } catch (\Throwable) {
-            return null;
+            return $value;
         }
+    }
+
+    // compatibility aliases used by controllers/services
+    public function setHostAttribute(?string $value): void
+    {
+        $this->attributes['smtp_host'] = $value;
+    }
+
+    public function getHostAttribute(): ?string
+    {
+        return $this->attributes['smtp_host'] ?? null;
+    }
+
+    public function setPortAttribute($value): void
+    {
+        $this->attributes['smtp_port'] = $value;
+    }
+
+    public function getPortAttribute(): ?int
+    {
+        return isset($this->attributes['smtp_port']) ? (int) $this->attributes['smtp_port'] : null;
+    }
+
+    public function setUsernameAttribute(?string $value): void
+    {
+        $this->attributes['smtp_username'] = $value;
+    }
+
+    public function getUsernameAttribute(): ?string
+    {
+        return $this->attributes['smtp_username'] ?? null;
+    }
+
+    public function setPasswordAttribute(?string $value): void
+    {
+        $this->setSmtpPasswordAttribute($value);
+    }
+
+    public function getPasswordAttribute(): ?string
+    {
+        return $this->smtp_password;
+    }
+
+    public function setFromAddressAttribute(?string $value): void
+    {
+        $this->attributes['from_email'] = $value;
+    }
+
+    public function getFromAddressAttribute(): ?string
+    {
+        return $this->attributes['from_email'] ?? null;
     }
 
     public function scopeOwnedBy($query, int $userId)

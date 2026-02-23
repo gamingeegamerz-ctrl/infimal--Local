@@ -23,7 +23,7 @@ class SmtpController extends Controller
             'totalSmtp' => $smtpSettings->count(),
             'activeSmtp' => $smtpSettings->where('is_active', true)->count(),
             'usageStats' => [
-                'sent_today' => 0,
+                'sent_today' => SMTPAccount::ownedBy($userId)->sum('sent_today'),
                 'sent_this_month' => 0,
                 'total_sent' => 0,
                 'success_rate' => 0,
@@ -34,12 +34,12 @@ class SmtpController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
+            'name' => 'nullable|string|max:255',
             'host' => 'required|string|max:255',
             'port' => 'required|integer|min:1|max:65535',
             'username' => 'required|string|max:255',
             'password' => 'required|string|max:1000',
             'encryption' => 'required|in:tls,ssl,none',
-            'from_email' => 'nullable|email|max:255',
             'from_address' => 'nullable|email|max:255',
             'from_name' => 'nullable|string|max:255',
             'daily_limit' => 'nullable|integer|min:1|max:100000',
@@ -47,7 +47,6 @@ class SmtpController extends Controller
             'warmup_enabled' => 'nullable|boolean',
         ]);
 
-        $data['from_email'] = $data['from_email'] ?? $data['from_address'] ?? null;
         $this->smtpService->saveForUser(Auth::id(), $data);
 
         return back()->with('success', 'SMTP added successfully.');
@@ -58,12 +57,12 @@ class SmtpController extends Controller
         $smtp = SMTPAccount::ownedBy(Auth::id())->findOrFail($id);
 
         $data = $request->validate([
+            'name' => 'nullable|string|max:255',
             'host' => 'required|string|max:255',
             'port' => 'required|integer|min:1|max:65535',
             'username' => 'required|string|max:255',
             'password' => 'nullable|string|max:1000',
             'encryption' => 'required|in:tls,ssl,none',
-            'from_email' => 'nullable|email|max:255',
             'from_address' => 'nullable|email|max:255',
             'from_name' => 'nullable|string|max:255',
             'daily_limit' => 'nullable|integer|min:1|max:100000',
@@ -71,7 +70,6 @@ class SmtpController extends Controller
             'warmup_enabled' => 'nullable|boolean',
         ]);
 
-        $data['from_email'] = $data['from_email'] ?? $data['from_address'] ?? $smtp->from_email;
         $this->smtpService->saveForUser(Auth::id(), $data, $smtp);
 
         return back()->with('success', 'SMTP updated successfully.');
