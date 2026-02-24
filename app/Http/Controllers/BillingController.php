@@ -13,21 +13,23 @@ class BillingController extends Controller
     {
         $user = Auth::user();
         
-        // If user hasn't paid, redirect to payment page
         if (!$user->hasPaid()) {
             return view('billing.payment', [
                 'user' => $user,
                 'price' => 299.00,
-                'currency' => 'USD'
+                'currency' => 'USD',
+                'status' => 'free',
+                'plan' => $user->plan_name ?? 'Free',
+                'paid_at' => $user->paid_at,
             ]);
         }
-        
-        // User has paid, show billing dashboard
+
         return view('billing.index', [
             'user' => $user,
-            'plan' => 'Lifetime',
+            'plan' => $user->plan_name ?? 'Free',
             'status' => 'active',
-            'payment_date' => $user->payment_date,
+            'paid_at' => $user->paid_at ?? $user->payment_date,
+            'payment_date' => $user->paid_at ?? $user->payment_date,
             'expiry_date' => $user->plan_expiry_date,
             'amount_paid' => $user->payment_amount,
             'transaction_id' => $user->transaction_id,
@@ -66,6 +68,8 @@ class BillingController extends Controller
                 ->where('id', $user->id)
                 ->update([
                     'payment_status' => 'paid',
+                    'plan_name' => 'Lifetime',
+                    'paid_at' => now(),
                     'payment_date' => now(),
                     'payment_amount' => $amount,
                     'transaction_id' => $paymentResult['transaction_id'],

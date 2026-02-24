@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Campaign;
+use App\Models\MailingList;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,16 +20,17 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
         
-        // Get user stats (you can modify these based on your actual data)
         $stats = [
-            'total_campaigns' => $user->campaigns()->count(),
-            'total_subscribers' => $user->lists()->withCount('subscribers')->get()->sum('subscribers_count'),
-            'total_sent' => $user->campaigns()->sum('sent_count'),
-            'account_age' => $user->created_at->diffForHumans(),
+            'total_campaigns' => Campaign::where('user_id', $user->id)->count(),
+            'total_subscribers' => MailingList::where('user_id', $user->id)
+                ->withCount('subscribers')
+                ->get()
+                ->sum('subscribers_count'),
+            'total_sent' => Campaign::where('user_id', $user->id)->sum('sent_count'),
+            'account_age' => optional($user->created_at)->diffForHumans() ?? 'N/A',
         ];
-        
-        // Determine payment status (you can modify this based on your billing system)
-        $paymentStatus = $user->subscribed() ? 'paid' : 'free';
+
+        $paymentStatus = $user->hasPaid() ? 'paid' : 'free';
         
         return view('profile.index', [
             'user' => $user,
@@ -196,10 +199,13 @@ class ProfileController extends Controller
         $user = Auth::user();
         
         $stats = [
-            'total_campaigns' => $user->campaigns()->count(),
-            'total_subscribers' => $user->lists()->withCount('subscribers')->get()->sum('subscribers_count'),
-            'total_sent' => $user->campaigns()->sum('sent_count'),
-            'account_age' => $user->created_at->diffForHumans(),
+            'total_campaigns' => Campaign::where('user_id', $user->id)->count(),
+            'total_subscribers' => MailingList::where('user_id', $user->id)
+                ->withCount('subscribers')
+                ->get()
+                ->sum('subscribers_count'),
+            'total_sent' => Campaign::where('user_id', $user->id)->sum('sent_count'),
+            'account_age' => optional($user->created_at)->diffForHumans() ?? 'N/A',
         ];
         
         return response()->json($stats);
