@@ -26,6 +26,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'paid_at' => 'datetime',
+        'payment_date' => 'datetime',
+        'plan_expiry_date' => 'datetime',
     ];
 
     public function campaigns()
@@ -50,6 +52,6 @@ class User extends Authenticatable
 
     public function hasPaid(): bool
     {
-        return $this->payment_status === 'paid';
+        return in_array((string) $this->payment_status, ['paid'], true);
     }
 }

@@ -16,13 +16,21 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        $totalCampaigns = $user->campaigns()->count();
+
+        $totalSubscribers = MailingList::where('user_id', $user->id)
+            ->withCount('subscribers')
+            ->get()
+            ->sum('subscribers_count');
+
+        $totalSent = Campaign::where('user_id', $user->id)
+            ->selectRaw('COALESCE(SUM(sent_count), SUM(total_sent), 0) as sent_total')
+            ->value('sent_total') ?? 0;
+
         $stats = [
-            'total_campaigns' => Campaign::where('user_id', $user->id)->count(),
-            'total_subscribers' => MailingList::where('user_id', $user->id)
-                ->withCount('subscribers')
-                ->get()
-                ->sum('subscribers_count'),
-            'total_sent' => Campaign::where('user_id', $user->id)->sum('sent_count'),
+            'total_campaigns' => $totalCampaigns,
+            'total_subscribers' => $totalSubscribers,
+            'total_sent' => (int) $totalSent,
             'account_age' => optional($user->created_at)?->diffForHumans() ?? 'N/A',
         ];
 
@@ -76,7 +84,6 @@ class ProfileController extends Controller
         ]);
     }
 
-
     // Route compatibility wrappers for existing web.php bindings
     public function changePassword(Request $request)
     {
@@ -96,18 +103,13 @@ class ProfileController extends Controller
         return view('profile.index', [
             'user' => Auth::user(),
             'stats' => [
-                'total_campaigns' => Campaign::where('user_id', Auth::id())->count(),
+                'total_campaigns' => Auth::user()->campaigns()->count(),
                 'total_subscribers' => MailingList::where('user_id', Auth::id())->withCount('subscribers')->get()->sum('subscribers_count'),
-                'total_sent' => Campaign::where('user_id', Auth::id())->sum('sent_count'),
+                'total_sent' => (int) (Campaign::where('user_id', Auth::id())->selectRaw('COALESCE(SUM(sent_count), SUM(total_sent), 0) as sent_total')->value('sent_total') ?? 0),
                 'account_age' => optional(Auth::user()->created_at)?->diffForHumans() ?? 'N/A',
             ],
             'paymentStatus' => Auth::user()->hasPaid() ? 'paid' : 'free',
         ]);
-    }
-
-    public function updateSettings(Request $request)
-    {
-        return $this->updatePreferences($request);
     }
 
     public function updatePassword(Request $request)
@@ -190,6 +192,7 @@ class ProfileController extends Controller
         }
 
         $preferences = $user->preferences ?? [];
+
         $preferences['email_notifications'] = $request->boolean('email_notifications', true);
         $preferences['campaign_notifications'] = $request->boolean('campaign_notifications', true);
         $preferences['weekly_reports'] = $request->boolean('weekly_reports', true);
@@ -211,12 +214,9 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $stats = [
-            'total_campaigns' => Campaign::where('user_id', $user->id)->count(),
-            'total_subscribers' => MailingList::where('user_id', $user->id)
-                ->withCount('subscribers')
-                ->get()
-                ->sum('subscribers_count'),
-            'total_sent' => Campaign::where('user_id', $user->id)->sum('sent_count'),
+            'total_campaigns' => $user->campaigns()->count(),
+            'total_subscribers' => MailingList::where('user_id', $user->id)->withCount('subscribers')->get()->sum('subscribers_count'),
+            'total_sent' => (int) (Campaign::where('user_id', $user->id)->selectRaw('COALESCE(SUM(sent_count), SUM(total_sent), 0) as sent_total')->value('sent_total') ?? 0),
             'account_age' => optional($user->created_at)?->diffForHumans() ?? 'N/A',
         ];
 
@@ -232,7 +232,6 @@ class ProfileController extends Controller
         $user = $request->user();
 
         Auth::logout();
-
         $user->delete();
 
         $request->session()->invalidate();

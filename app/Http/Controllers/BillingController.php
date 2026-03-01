@@ -27,7 +27,8 @@ class BillingController extends Controller
             'user' => $user,
             'plan' => $user->plan_name ?? 'Free',
             'paid_at' => $user->paid_at,
-            'status' => $user->payment_status ?? 'paid',
+            'payment_status' => $user->payment_status ?? 'paid',
+            'status' => 'active',
             'payment_date' => $user->paid_at ?? $user->payment_date,
             'expiry_date' => $user->plan_expiry_date,
             'amount_paid' => $user->payment_amount,
@@ -147,6 +148,7 @@ class BillingController extends Controller
 
         $html = view('billing.invoice', ['invoice' => $invoice])->render();
 
-        return response($html)->header('Content-Type', 'text/html');
+        return response($html)
+            ->header('Content-Type', 'text/html');
     }
 }
