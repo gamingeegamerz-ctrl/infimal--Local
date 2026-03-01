@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EmailLog;
 use App\Models\SMTPAccount;
 use App\Services\SmtpService;
 use Illuminate\Http\Request;
@@ -53,6 +52,17 @@ class SmtpController extends Controller
         return back()->with('success', 'SMTP added successfully.');
     }
 
+    public function show(string $id)
+    {
+        $smtp = SMTPAccount::ownedBy(Auth::id())->findOrFail($id);
+        return response()->json($smtp);
+    }
+
+    public function edit(string $id)
+    {
+        return $this->show($id);
+    }
+
     public function update(Request $request, string $id)
     {
         $smtp = SMTPAccount::ownedBy(Auth::id())->findOrFail($id);
@@ -62,7 +72,7 @@ class SmtpController extends Controller
             'host' => 'required|string|max:255',
             'port' => 'required|integer|min:1|max:65535',
             'username' => 'required|string|max:255',
-            'password' => 'nullable|string|max:1000',
+            'password' => 'nullable|string|max:1000',  // ✅ Nullable for updates
             'encryption' => 'required|in:tls,ssl,none',
             'from_address' => 'nullable|email|max:255',
             'from_name' => 'nullable|string|max:255',
@@ -71,7 +81,7 @@ class SmtpController extends Controller
             'warmup_enabled' => 'nullable|boolean',
         ]);
 
-        $this->smtpService->saveForUser(Auth::id(), $data, $smtp);
+        $this->smtpService->saveForUser(Auth::id(), $data, $smtp);  // ✅ Pass $smtp for update
 
         return back()->with('success', 'SMTP updated successfully.');
     }
@@ -95,35 +105,37 @@ class SmtpController extends Controller
         return back()->with('success', 'Default SMTP updated.');
     }
 
-
-    public function health()
+    public function verify(string $smtp)
     {
-        $userId = Auth::id();
+        $smtpModel = SMTPAccount::ownedBy(Auth::id())->findOrFail($smtp);
+        $result = $this->smtpService->testConnection($smtpModel, Auth::user()->email);
 
-        $health = SMTPAccount::ownedBy($userId)
-            ->get()
-            ->map(function (SMTPAccount $smtp) {
-                $failed = EmailLog::where('smtp_id', $smtp->id)
-                    ->whereIn('status', ['failed', 'bounced'])
-                    ->whereDate('created_at', now()->toDateString())
-                    ->count();
+        return response()->json([
+            'verified' => $result['success'],
+            'message' => $result['message'],
+        ], $result['success'] ? 200 : 422);
+    }
 
-                $availability = $smtp->is_active && $smtp->sent_today < max(1, (int) $smtp->daily_limit);
+    public function getCredentials()
+    {
+        $smtp = SMTPAccount::ownedBy(Auth::id())
+            ->where('is_active', true)
+            ->orderByDesc('is_default')
+            ->latest('id')
+            ->first();
 
-                return [
-                    'id' => $smtp->id,
-                    'name' => $smtp->name,
-                    'host' => $smtp->host,
-                    'is_active' => (bool) $smtp->is_active,
-                    'availability' => $availability,
-                    'sent_today' => (int) $smtp->sent_today,
-                    'daily_limit' => (int) $smtp->daily_limit,
-                    'last_used_at' => $smtp->last_used_at,
-                    'failures_today' => $failed,
-                ];
-            });
+        if (!$smtp) {
+            return response()->json(['error' => 'SMTP not configured'], 404);
+        }
 
-        return response()->json($health);
+        return response()->json([
+            'host' => $smtp->host,
+            'port' => $smtp->port,
+            'username' => $smtp->username,
+            'from_address' => $smtp->from_address,
+            'from_name' => $smtp->from_name,
+            'encryption' => $smtp->encryption,
+        ]);
     }
 
     public function destroy(string $id)
