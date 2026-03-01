@@ -52,6 +52,6 @@ class User extends Authenticatable
 
     public function hasPaid(): bool
     {
-        return in_array((string) $this->payment_status, ['paid'], true);
+        return in_array((string) $this->payment_status, ['paid'], true) || !is_null($this->paid_at);
     }
 }
