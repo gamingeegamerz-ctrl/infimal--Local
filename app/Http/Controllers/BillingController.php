@@ -49,7 +49,7 @@ class BillingController extends Controller
     {
         $request->validate([
             'payment_method' => 'required|in:stripe,paypal,razorpay',
-            'amount' => 'required|numeric|min:299'
+            'amount' => 'required|numeric|min:299',
         ]);
 
         $user = Auth::user();
@@ -72,7 +72,7 @@ class BillingController extends Controller
                     'payment_amount' => $amount,
                     'transaction_id' => $paymentResult['transaction_id'],
                     'plan_expiry_date' => now()->addYears(100),
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]);
 
             $this->createInvoice($user->id, $amount, $paymentResult);
@@ -80,13 +80,13 @@ class BillingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Payment successful! Your account is now active.',
-                'redirect' => '/dashboard'
+                'redirect' => '/dashboard',
             ]);
         }
 
         return response()->json([
             'success' => false,
-            'error' => $paymentResult['error'] ?? 'Payment failed'
+            'error' => $paymentResult['error'] ?? 'Payment failed',
         ], 400);
     }
 
@@ -101,8 +101,8 @@ class BillingController extends Controller
                 'status' => 'completed',
                 'method' => $method,
                 'amount' => $amount,
-                'currency' => 'USD'
-            ]
+                'currency' => 'USD',
+            ],
         ];
     }
 
@@ -125,13 +125,13 @@ class BillingController extends Controller
                     'Unlimited Subscribers',
                     'Unlimited Campaigns',
                     'Priority Support',
-                    'All Features Included'
-                ]
+                    'All Features Included',
+                ],
             ]),
             'payment_method' => $paymentResult['gateway_response']['method'],
             'paid_at' => now(),
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
     }
 

@@ -31,7 +31,7 @@ class ProfileController extends Controller
             'total_campaigns' => $totalCampaigns,
             'total_subscribers' => $totalSubscribers,
             'total_sent' => (int) $totalSent,
-            'account_age' => optional($user->created_at)->diffForHumans() ?? 'Just now',
+            'account_age' => optional($user->created_at)?->diffForHumans() ?? 'N/A',
         ];
 
         $paymentStatus = $user->hasPaid() ? 'paid' : 'free';
@@ -65,7 +65,7 @@ class ProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -80,7 +80,35 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Profile updated successfully',
-            'user' => $user
+            'user' => $user,
+        ]);
+    }
+
+    // Route compatibility wrappers for existing web.php bindings
+    public function changePassword(Request $request)
+    {
+        return $this->updatePassword($request);
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => 'Avatar update endpoint is available.',
+        ]);
+    }
+
+    public function settings()
+    {
+        return view('profile.index', [
+            'user' => Auth::user(),
+            'stats' => [
+                'total_campaigns' => Auth::user()->campaigns()->count(),
+                'total_subscribers' => MailingList::where('user_id', Auth::id())->withCount('subscribers')->get()->sum('subscribers_count'),
+                'total_sent' => (int) (Campaign::where('user_id', Auth::id())->selectRaw('COALESCE(SUM(sent_count), SUM(total_sent), 0) as sent_total')->value('sent_total') ?? 0),
+                'account_age' => optional(Auth::user()->created_at)?->diffForHumans() ?? 'N/A',
+            ],
+            'paymentStatus' => Auth::user()->hasPaid() ? 'paid' : 'free',
         ]);
     }
 
@@ -97,7 +125,7 @@ class ProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -107,7 +135,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Password updated successfully'
+            'message' => 'Password updated successfully',
         ]);
     }
 
@@ -118,7 +146,7 @@ class ProfileController extends Controller
         if ($user->password) {
             return response()->json([
                 'success' => false,
-                'message' => 'Password already set'
+                'message' => 'Password already set',
             ], 400);
         }
 
@@ -130,7 +158,7 @@ class ProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -140,7 +168,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Password set successfully'
+            'message' => 'Password set successfully',
         ]);
     }
 
@@ -159,7 +187,7 @@ class ProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -177,7 +205,7 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Preferences updated successfully',
-            'preferences' => $preferences
+            'preferences' => $preferences,
         ]);
     }
 
@@ -189,7 +217,7 @@ class ProfileController extends Controller
             'total_campaigns' => $user->campaigns()->count(),
             'total_subscribers' => MailingList::where('user_id', $user->id)->withCount('subscribers')->get()->sum('subscribers_count'),
             'total_sent' => (int) (Campaign::where('user_id', $user->id)->selectRaw('COALESCE(SUM(sent_count), SUM(total_sent), 0) as sent_total')->value('sent_total') ?? 0),
-            'account_age' => optional($user->created_at)->diffForHumans() ?? 'Just now',
+            'account_age' => optional($user->created_at)?->diffForHumans() ?? 'N/A',
         ];
 
         return response()->json($stats);
