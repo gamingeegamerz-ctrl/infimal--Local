@@ -11,18 +11,20 @@ class CheckPayment
     public function handle(Request $request, Closure $next)
     {
         $user = Auth::user();
-        
-        // Allow access to billing/payment pages
-        if ($request->is('billing*') || $request->is('logout')) {
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if ($request->routeIs('billing', 'payment', 'payment.*') || $request->is('paypal/*')) {
             return $next($request);
         }
-        
-        // Check if user has paid
-        if (!$user || !$user->hasPaid()) {
-            return redirect()->route('billing.index')
-                ->with('error', 'Please complete your payment to access the dashboard.');
+
+        if (!$user->hasPaid()) {
+            return redirect()->route('billing')
+                ->with('error', 'Access denied. Payment required.');
         }
-        
+
         return $next($request);
     }
 }

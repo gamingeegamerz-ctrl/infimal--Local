@@ -1,20 +1,12 @@
 <?php
 
-namespace App\Http\Http;
+namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
 {
-    /**
-     * The application's global HTTP middleware stack.
-     *
-     * These middleware are run during every request to your application.
-     *
-     * @var array<int, class-string|string>
-     */
     protected $middleware = [
-        // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
@@ -23,11 +15,6 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
     ];
 
-    /**
-     * The application's route middleware groups.
-     *
-     * @var array<string, array<int, class-string|string>>
-     */
     protected $middlewareGroups = [
         'web' => [
             \App\Http\Middleware\EncryptCookies::class,
@@ -37,23 +24,13 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
-
         'api' => [
-            // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
-    /**
-     * The application's middleware aliases.
-     *
-     * Aliases may be used instead of class names to conveniently assign middleware to routes.
-     *
-     * @var array<string, class-string|string>
-     */
     protected $middlewareAliases = [
-        // Laravel Default Middleware
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
@@ -65,18 +42,8 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        
-        // =================== INFIMAL CUSTOM MIDDLEWARE ===================
-        // ? ADMIN MIDDLEWARE 
         'admin' => \App\Http\Middleware\IsAdmin::class,
-        
-        // Other middleware (comment out if not created yet)
-        // 'license' => \App\Http\Middleware\CheckLicense::class,
-        // 'subscription' => \App\Http\Middleware\CheckSubscription::class,
-        // 'paid' => \App\Http\Middleware\Paid::class,
-        // 'google.oauth' => \Illuminate\Routing\Middleware\ValidateSignature::class,
-        // 'payment.completed' => \App\Http\Middleware\CheckPaymentCompleted::class,
-        // 'trust' => \App\Http\Middleware\CheckTrustScore::class,
-        // 'smtp.setup' => \App\Http\Middleware\CheckSmtpSetup::class,
+        'paid' => \App\Http\Middleware\CheckPayment::class,
+        'infimal.access' => \App\Http\Middleware\EnsureInfimalAccess::class,
     ];
 }

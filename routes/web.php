@@ -18,6 +18,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\Admin\RevenueController;
+use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,7 +89,22 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing');
+    Route::get('/payment', function () {
+        return view('payments.checkout');
+    })->name('payment');
+    Route::post('/paypal/create-order', [PayPalController::class, 'createOrder']);
+    Route::post('/paypal/capture-order/{orderId}', [PayPalController::class, 'captureOrder']);
+    Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+    Route::post('/payment/create-checkout', [PaymentController::class, 'processPaddleCheckout'])->name('payment.create');
+    Route::post('/payment/process', [PaymentController::class, 'processPaddleCheckout'])->name('payment.process');
+});
+
+
 // Tracking (public routes - no auth required)
+Route::get('/track/open/{id}.png', [TrackingController::class, 'openById'])->name('track.open.id');
+Route::get('/track/click/{id}', [TrackingController::class, 'clickById'])->name('track.click.id');
 Route::get('/track/open', [TrackingController::class, 'trackOpen'])->name('track.open');
 Route::get('/track/click', [TrackingController::class, 'trackClick'])->name('track.click');
 Route::get('/track/unsubscribe', [TrackingController::class, 'unsubscribe'])->name('track.unsubscribe');
@@ -96,7 +112,7 @@ Route::post('/track/bounce', [TrackingController::class, 'trackBounce'])->name('
 
 // =================== PROTECTED ROUTES ===================
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'paid']).group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
@@ -144,21 +160,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/smtp/{smtp}/verify', [SmtpController::class, 'verify'])->name('smtp.verify');
     Route::post('/smtp/{smtp}/set-default', [SmtpController::class, 'setDefault'])->name('smtp.set-default');
     
-    // BILLING
-    Route::get('/billing', [BillingController::class, 'index'])->name('billing');
-    
-    // ✅✅✅ PAYMENT - PAYPAL INTEGRATED ✅✅✅
-    Route::get('/payment', function () {
-        return view('payments.checkout');
-    })->name('payment');
-    
-    
-    Route::post('/paypal/create-order', [PayPalController::class, 'createOrder']);
-    Route::post('/paypal/capture-order/{orderId}', [PayPalController::class, 'captureOrder']);
-    
-    Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
-    Route::post('/payment/create-checkout', [PaymentController::class, 'processPaddleCheckout'])->name('payment.create');
-    Route::post('/payment/process', [PaymentController::class, 'processPaddleCheckout'])->name('payment.process');
     
     // PROFILE
     Route::prefix('profile')->name('profile.')->group(function () {
@@ -193,6 +194,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/limits', [DashboardController::class, 'getLimits'])->name('limits');
         Route::get('/stats', [DashboardController::class, 'getStats'])->name('stats');
         Route::get('/recent-activity', [DashboardController::class, 'getRecentActivity'])->name('recent-activity');
+        Route::get('/admin/analytics/users', [AdminAnalyticsController::class, 'users'])->name('admin.analytics.users');
+        Route::get('/admin/analytics/users/{userId}', [AdminAnalyticsController::class, 'userDetail'])->name('admin.analytics.user-detail');
     });
 });
 
