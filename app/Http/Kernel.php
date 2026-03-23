@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Http;
+namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
@@ -73,7 +73,7 @@ class Kernel extends HttpKernel
         // Other middleware (comment out if not created yet)
         // 'license' => \App\Http\Middleware\CheckLicense::class,
         // 'subscription' => \App\Http\Middleware\CheckSubscription::class,
-        // 'paid' => \App\Http\Middleware\Paid::class,
+        'paid' => \App\Http\Middleware\CheckPayment::class,
         // 'google.oauth' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         // 'payment.completed' => \App\Http\Middleware\CheckPaymentCompleted::class,
         // 'trust' => \App\Http\Middleware\CheckTrustScore::class,

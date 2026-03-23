@@ -57,11 +57,14 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'payment_status' => 'unpaid',
+            'is_paid' => false,
+            'plan_name' => 'InfiMal Pro',
         ]);
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Account created successfully!');
+        return redirect()->route('billing')->with('success', 'Account created successfully. Please complete your $299 payment to continue.');
     }
 
     // Forgot Password

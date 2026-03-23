@@ -11,16 +11,16 @@ class EnsureInfimalAccess
     {
         $user = auth()->user();
 
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
         if (!$user->hasPaid()) {
-            return redirect()->route('payment.checkout');
+            return redirect()->route('billing');
         }
 
-        if (!$user->hasVerifiedEmail()) {
-            return redirect()->route('verification.notice');
-        }
-
-        if (empty($user->license_key)) {
-            abort(403, 'License key missing');
+        if (empty($user->license_key) && !$user->license?->is_active) {
+            return redirect()->route('billing')->with('error', 'Active license required.');
         }
 
         return $next($request);
