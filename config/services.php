@@ -44,6 +44,13 @@ return [
     'api_key' => env('POSTAL_API_KEY'),
 ],
 
+    'paypal' => [
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret' => env('PAYPAL_SECRET'),
+        'mode' => env('PAYPAL_MODE', 'sandbox'),
+        'sandbox_client_id' => env('PAYPAL_CLIENT_ID'),
+        'sandbox_secret' => env('PAYPAL_SECRET'),
+    ],
 
 ];
 
