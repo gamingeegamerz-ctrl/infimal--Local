@@ -36,7 +36,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-            return redirect()->route('dashboard')->with('success', 'Login successful!');
+            return redirect()->route(Auth::user()->hasPaid() ? 'dashboard' : 'billing')->with('success', 'Login successful!');
         }
 
         return back()->withErrors([
@@ -57,11 +57,15 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'payment_status' => 'unpaid',
+            'is_paid' => false,
+            'plan_name' => null,
+            'paid_at' => null,
         ]);
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Account created successfully!');
+        return redirect()->route('billing')->with('success', 'Account created successfully. Please complete payment to continue.');
     }
 
     // Forgot Password

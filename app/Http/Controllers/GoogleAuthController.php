@@ -37,6 +37,9 @@ class GoogleAuthController extends Controller
                     'password'   => bcrypt(Str::random(16)),
                     // IMPORTANT DEFAULTS
                     'payment_status' => 'unpaid',
+                    'is_paid' => false,
+                    'plan_name' => null,
+                    'paid_at' => null,
                     'license_key'    => null,
                 ]);
             } else {

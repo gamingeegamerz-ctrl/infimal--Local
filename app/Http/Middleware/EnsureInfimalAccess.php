@@ -11,11 +11,15 @@ class EnsureInfimalAccess
     {
         $user = auth()->user();
 
-        if (!$user->hasPaid()) {
-            return redirect()->route('payment.checkout');
+        if (!$user) {
+            return redirect()->route('login');
         }
 
-        if (!$user->hasVerifiedEmail()) {
+        if (!$user->hasPaid()) {
+            return redirect()->route('billing');
+        }
+
+        if (method_exists($user, 'hasVerifiedEmail') && !$user->hasVerifiedEmail()) {
             return redirect()->route('verification.notice');
         }
 
