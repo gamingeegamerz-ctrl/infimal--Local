@@ -1,4 +1,4 @@
-k<?php
+<?php
 
 namespace App\Models;
 
@@ -12,16 +12,17 @@ class License extends Model
     protected $fillable = [
         'license_key',
         'user_id',
+        'status',
         'plan_type',
         'duration_days',
         'expires_at',
         'is_active',
-        'notes'
+        'notes',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
     ];
 
     public function user()
@@ -29,13 +30,12 @@ class License extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Generate a unique license key
-    public static function generateLicenseKey()
+    public static function generateLicenseKey(): string
     {
         do {
-            $key = strtoupper(bin2hex(random_bytes(16)));
+            $key = 'INFI-' . strtoupper(bin2hex(random_bytes(16)));
         } while (self::where('license_key', $key)->exists());
-        
+
         return $key;
     }
 }

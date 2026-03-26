@@ -57,6 +57,7 @@ class DashboardController extends Controller
             'campaignLabels' => [],
             'campaignOpens' => [],
             'campaignClicks' => [],
+            'smtpStatus' => 'Not Connected',
         ];
         
         try {
@@ -208,6 +209,14 @@ class DashboardController extends Controller
                     round((($data['totalOpens'] + $data['totalClicks']) / $data['totalEmailsSent']) * 100, 2) : 0;
             }
             
+
+            if ($this->tableExists('smtps')) {
+                $smtp = DB::table('smtps')->where('user_id', $user->id)->orderByDesc('id')->first();
+                if ($smtp) {
+                    $data['smtpStatus'] = !empty($smtp->is_active) ? 'Active' : 'Failed';
+                }
+            }
+
             // ========== RECENT CAMPAIGNS ==========
             $data['recentCampaigns'] = DB::table('campaigns')
                 ->where('user_id', $user->id)

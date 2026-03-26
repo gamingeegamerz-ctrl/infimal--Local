@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class GoogleAuthController extends Controller
@@ -34,7 +35,7 @@ class GoogleAuthController extends Controller
                     'name'       => $googleUser->getName(),
                     'email'      => $googleUser->getEmail(),
                     'google_id'  => $googleUser->getId(),
-                    'password'   => bcrypt(Str::random(16)),
+                    'password'   => Hash::make(Str::random(64)),
                     // IMPORTANT DEFAULTS
                     'payment_status' => 'unpaid',
                     'license_key'    => null,
@@ -48,18 +49,18 @@ class GoogleAuthController extends Controller
                 }
             }
 
-            // ?? Login user
             Auth::login($user, true);
 
-            // ================================
-            // ?? NO PAYMENT ? NO DASHBOARD
-            // ================================
             if (!$user->hasPaid()) {
                 return redirect()->route('payment')
                     ->with('info', 'Please complete payment to access dashboard.');
             }
 
-            // ? Paid user ? Dashboard
+            if (is_null($user->otp_verified_at)) {
+                return redirect()->route('otp.verify.form')
+                    ->with('info', 'Please verify OTP to activate access.');
+            }
+
             return redirect()->route('dashboard')
                 ->with('success', 'Welcome ' . $user->name . '!');
 
