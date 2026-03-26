@@ -165,7 +165,7 @@
                             <div>
                                 <p class="text-white/80 text-base font-medium leading-normal">SMTP Configurations</p>
                                 <p class="text-white tracking-light text-3xl font-bold leading-tight">{{ $totalSmtp }}</p>
-                                <p class="text-green-400 text-sm font-medium leading-normal">{{ $activeSmtp }} active</p>
+                                <p class="text-green-400 text-sm font-medium leading-normal">{{ $activeSmtp }} Active • {{ $failedSmtp }} Failed • {{ $notConnectedSmtp }} Not Connected</p>
                             </div>
                             <div class="p-3 rounded-full bg-blue-500/20">
                                 <span class="material-symbols-outlined text-blue-500">dns</span>
@@ -255,10 +255,12 @@
                                 @foreach($smtpSettings as $smtp)
                                 <tr class="border-b border-white/5 hover:bg-white/5">
                                     <td class="p-4">
-                                        @if($smtp->is_active)
+                                        @if($smtp->last_test_status === 'active')
                                         <span class="px-3 py-1 rounded-full text-xs bg-green-500/20 text-green-400">Active</span>
+                                        @elseif($smtp->last_test_status === 'failed')
+                                        <span class="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-400">Failed</span>
                                         @else
-                                        <span class="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-400">Inactive</span>
+                                        <span class="px-3 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">Not Connected</span>
                                         @endif
                                     </td>
                                     <td class="p-4">
