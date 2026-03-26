@@ -17,6 +17,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\OtpVerificationController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 
@@ -88,6 +89,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::middleware('auth')->get('/verify-otp', [OtpVerificationController::class, 'notice'])->name('otp.notice');
+Route::middleware('auth')->post('/verify-otp', [OtpVerificationController::class, 'verify'])->name('otp.verify');
+Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
 // Tracking (public routes - no auth required)
 Route::get('/track/open/{id}.png', [TrackingController::class, 'openById'])->name('track.open.id');
@@ -100,8 +104,7 @@ Route::post('/track/bounce', [TrackingController::class, 'trackBounce'])->name('
 // =================== PROTECTED ROUTES ===================
 
 Route::middleware(['auth'])->group(function () {
-    
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('infimal.access')->name('dashboard');
     
     // WORKSPACES
     Route::prefix('workspaces')->name('workspaces.')->group(function () {
@@ -115,14 +118,14 @@ Route::middleware(['auth'])->group(function () {
     });
     
     // CAMPAIGNS
-    Route::resource('campaigns', CampaignController::class);
+    Route::resource('campaigns', CampaignController::class)->middleware('infimal.access');
     Route::post('/campaigns/{campaign}/send', [CampaignController::class, 'send'])->name('campaigns.send');
     Route::get('/campaigns/{campaign}/preview', [CampaignController::class, 'preview'])->name('campaigns.preview');
     Route::get('/campaigns/{campaign}/analytics', [CampaignController::class, 'analytics'])->name('campaigns.analytics');
     Route::get('/campaigns/{campaign}/duplicate', [CampaignController::class, 'duplicate'])->name('campaigns.duplicate');
     
     // Subscribers Routes
-    Route::get('/subscribers', [SubscriberController::class, 'index'])->name('subscribers.index');
+    Route::get('/subscribers', [SubscriberController::class, 'index'])->middleware('infimal.access')->name('subscribers.index');
     Route::post('/subscribers', [SubscriberController::class, 'store'])->name('subscribers.store');
     Route::post('/subscribers/import', [SubscriberController::class, 'import'])->name('subscribers.import');
     Route::get('/subscribers/export', [SubscriberController::class, 'export'])->name('subscribers.export');
@@ -137,12 +140,12 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/lists/{id}', [ListController::class, 'destroy'])->name('lists.destroy');
    
     // MESSAGES
-    Route::resource('messages', MessageController::class);
+    Route::resource('messages', MessageController::class)->middleware('infimal.access');
     Route::post('/messages/{message}/duplicate', [MessageController::class, 'duplicate'])->name('messages.duplicate');
     Route::get('/messages/{message}/preview', [MessageController::class, 'preview'])->name('messages.preview');
     
     // SMTP
-    Route::resource('smtp', SmtpController::class);
+    Route::resource('smtp', SmtpController::class)->middleware('infimal.access');
     Route::post('/smtp/{smtp}/test', [SmtpController::class, 'test'])->name('smtp.test');
     Route::post('/smtp/{smtp}/verify', [SmtpController::class, 'verify'])->name('smtp.verify');
     Route::post('/smtp/{smtp}/set-default', [SmtpController::class, 'setDefault'])->name('smtp.set-default');
@@ -151,9 +154,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/billing', [BillingController::class, 'index'])->name('billing');
     
     // ✅✅✅ PAYMENT - PAYPAL INTEGRATED ✅✅✅
-    Route::get('/payment', function () {
-        return view('payments.checkout');
-    })->name('payment');
+    Route::get('/payment', [PaymentController::class, 'checkout'])->name('payment');
     
     
     Route::post('/paypal/create-order', [PayPalController::class, 'createOrder']);
