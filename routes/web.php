@@ -19,6 +19,7 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
+use App\Http\Controllers\AccessVerificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,6 +89,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
 
 // Tracking (public routes - no auth required)
 Route::get('/track/open/{id}.png', [TrackingController::class, 'openById'])->name('track.open.id');
@@ -99,9 +101,13 @@ Route::post('/track/bounce', [TrackingController::class, 'trackBounce'])->name('
 
 // =================== PROTECTED ROUTES ===================
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'paid.access'])->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/verify-otp', [AccessVerificationController::class, 'show'])->name('otp.notice');
+    Route::post('/verify-otp', [AccessVerificationController::class, 'verify'])->name('otp.verify');
+    Route::post('/verify-otp/resend', [AccessVerificationController::class, 'resend'])->name('otp.resend');
     
     // WORKSPACES
     Route::prefix('workspaces')->name('workspaces.')->group(function () {
@@ -151,9 +157,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/billing', [BillingController::class, 'index'])->name('billing');
     
     // ✅✅✅ PAYMENT - PAYPAL INTEGRATED ✅✅✅
-    Route::get('/payment', function () {
-        return view('payments.checkout');
-    })->name('payment');
+    Route::get('/payment', [PaymentController::class, 'showCheckout'])->name('payment');
     
     
     Route::post('/paypal/create-order', [PayPalController::class, 'createOrder']);

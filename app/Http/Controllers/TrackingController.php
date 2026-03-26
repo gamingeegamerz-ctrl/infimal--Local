@@ -11,41 +11,61 @@ class TrackingController extends Controller
 {
     public function openById(int $id): Response
     {
-        EmailLog::whereKey($id)->update(['opened' => true]);
+        $log = EmailLog::find($id);
+
+        if ($log && !$log->opened) {
+            $log->update([
+                'opened' => true,
+                'opened_at' => now(),
+                'opens_count' => ($log->opens_count ?? 0) + 1,
+            ]);
+        }
 
         return $this->pixel();
     }
 
     public function clickById(Request $request, int $id): RedirectResponse
     {
-        EmailLog::whereKey($id)->update(['clicked' => true]);
+        $log = EmailLog::find($id);
+
+        if ($log && !$log->clicked) {
+            $log->update([
+                'clicked' => true,
+                'clicked_at' => now(),
+                'clicks_count' => ($log->clicks_count ?? 0) + 1,
+            ]);
+        }
 
         $url = (string) $request->query('url', '/');
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            $url = url('/');
+        }
 
         return redirect()->away($url);
     }
 
-    // Backward-compatible endpoints used by existing links/routes
     public function trackOpen(Request $request): Response
     {
-        if ($request->filled('id')) {
-            return $this->openById((int) $request->query('id'));
-        }
-
-        return $this->pixel();
+        return $request->filled('id')
+            ? $this->openById((int) $request->query('id'))
+            : $this->pixel();
     }
 
     public function trackClick(Request $request): RedirectResponse
     {
-        if ($request->filled('id')) {
-            return $this->clickById($request, (int) $request->query('id'));
-        }
-
-        return redirect($request->query('url', '/'));
+        return $request->filled('id')
+            ? $this->clickById($request, (int) $request->query('id'))
+            : redirect('/');
     }
 
     public function trackBounce(Request $request)
     {
+        $data = $request->validate(['message_id' => 'required|string|max:255']);
+
+        EmailLog::where('message_id', $data['message_id'])
+            ->whereNull('bounced_at')
+            ->update(['status' => 'bounced', 'bounced_at' => now()]);
+
         return response()->json(['success' => true]);
     }
 
@@ -76,7 +96,6 @@ class TrackingController extends Controller
         return preg_replace_callback('/<a\s+([^>]*href=["\']([^"\']+)["\'][^>]*)>/i', function ($matches) use ($logId) {
             $originalUrl = $matches[2];
             $trackingUrl = url('/track/click/' . $logId . '?url=' . urlencode($originalUrl));
-
             return str_replace($originalUrl, $trackingUrl, $matches[0]);
         }, $htmlContent) ?? $htmlContent;
     }

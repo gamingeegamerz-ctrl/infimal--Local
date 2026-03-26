@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\EmailLog;
 use App\Models\SMTPAccount;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class SendEngineService
 {
@@ -44,6 +45,12 @@ class SendEngineService
 
     public function createLog(array $data): EmailLog
     {
-        return EmailLog::create($data);
+        $messageId = $data['message_id'] ?? (string) Str::uuid();
+        $data['message_id'] = $messageId;
+
+        return EmailLog::updateOrCreate(
+            ['message_id' => $messageId],
+            $data
+        );
     }
 }
