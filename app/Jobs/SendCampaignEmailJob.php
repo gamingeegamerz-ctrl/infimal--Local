@@ -14,6 +14,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Throwable;
 
 class SendCampaignEmailJob implements ShouldQueue
@@ -56,18 +57,19 @@ class SendCampaignEmailJob implements ShouldQueue
         }
 
         $htmlContent = $emailJob->html ?? $emailJob->body;
-        if ($emailJob->campaign_id) {
-            $trackingSeed = $engine->createLog([
-                'user_id' => $emailJob->user_id,
-                'campaign_id' => $emailJob->campaign_id,
-                'smtp_id' => $smtp->id,
-                'recipient_email' => $emailJob->to_email,
-                'to_email' => $emailJob->to_email,
-                'status' => 'pending',
-            ]);
+        $messageId = (string) Str::uuid();
 
-            $htmlContent = TrackingController::processEmailContent($htmlContent, $trackingSeed->id);
-        }
+        $trackingSeed = $engine->createLog([
+            'user_id' => $emailJob->user_id,
+            'campaign_id' => $emailJob->campaign_id,
+            'smtp_id' => $smtp->id,
+            'recipient_email' => $emailJob->to_email,
+            'to_email' => $emailJob->to_email,
+            'status' => 'pending',
+            'message_id' => $messageId,
+        ]);
+
+        $htmlContent = TrackingController::processEmailContent($htmlContent, $trackingSeed->id);
 
         Config::set('mail.default', 'smtp');
         Config::set('mail.mailers.smtp.host', $smtp->host);
@@ -99,7 +101,7 @@ class SendCampaignEmailJob implements ShouldQueue
                 'recipient_email' => $emailJob->to_email,
                 'to_email' => $emailJob->to_email,
                 'status' => 'sent',
-                'message_id' => $emailJob->id . '-' . now()->timestamp,
+                'message_id' => $messageId,
             ]);
 
             if ($emailJob->campaign_id) {

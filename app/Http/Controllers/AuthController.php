@@ -36,6 +36,14 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
+            if (!Auth::user()->hasPaid()) {
+                return redirect()->route('payment')->with('info', 'Please complete payment to continue.');
+            }
+
+            if (is_null(Auth::user()->otp_verified_at)) {
+                return redirect()->route('otp.verify.form')->with('info', 'Please verify the OTP sent to your email.');
+            }
+
             return redirect()->route('dashboard')->with('success', 'Login successful!');
         }
 
@@ -61,7 +69,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Account created successfully!');
+        return redirect()->route('payment')->with('success', 'Account created successfully. Complete payment to activate your account.');
     }
 
     // Forgot Password
