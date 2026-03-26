@@ -56,17 +56,20 @@ class SendCampaignEmailJob implements ShouldQueue
         }
 
         $htmlContent = $emailJob->html ?? $emailJob->body;
-        if ($emailJob->campaign_id) {
-            $trackingSeed = $engine->createLog([
-                'user_id' => $emailJob->user_id,
-                'campaign_id' => $emailJob->campaign_id,
-                'smtp_id' => $smtp->id,
-                'recipient_email' => $emailJob->to_email,
-                'to_email' => $emailJob->to_email,
-                'status' => 'pending',
-            ]);
 
-            $htmlContent = TrackingController::processEmailContent($htmlContent, $trackingSeed->id);
+        $messageId = (string) \Illuminate\Support\Str::uuid();
+        $emailLog = $engine->createLog([
+            'user_id' => $emailJob->user_id,
+            'campaign_id' => $emailJob->campaign_id,
+            'smtp_id' => $smtp->id,
+            'recipient_email' => $emailJob->to_email,
+            'to_email' => $emailJob->to_email,
+            'status' => 'pending',
+            'message_id' => $messageId,
+        ]);
+
+        if ($emailJob->campaign_id) {
+            $htmlContent = TrackingController::processEmailContent($htmlContent, $emailLog->id);
         }
 
         Config::set('mail.default', 'smtp');
@@ -99,7 +102,8 @@ class SendCampaignEmailJob implements ShouldQueue
                 'recipient_email' => $emailJob->to_email,
                 'to_email' => $emailJob->to_email,
                 'status' => 'sent',
-                'message_id' => $emailJob->id . '-' . now()->timestamp,
+                'message_id' => $messageId,
+                'sent_at' => now(),
             ]);
 
             if ($emailJob->campaign_id) {
@@ -123,6 +127,8 @@ class SendCampaignEmailJob implements ShouldQueue
                 'to_email' => $emailJob->to_email,
                 'status' => $emailJob->retry_count >= $this->tries ? 'bounced' : 'failed',
                 'error_message' => substr($e->getMessage(), 0, 1000),
+                'message_id' => $messageId,
+                'bounced_at' => $emailJob->retry_count >= $this->tries ? now() : null,
             ]);
 
             if ($emailJob->retry_count < $this->tries) {

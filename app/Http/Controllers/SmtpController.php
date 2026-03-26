@@ -18,10 +18,16 @@ class SmtpController extends Controller
         $userId = Auth::id();
         $smtpSettings = SMTPAccount::ownedBy($userId)->latest()->get();
 
+        $smtpStatus = 'Not Connected';
+        if ($smtpSettings->count() > 0) {
+            $smtpStatus = $smtpSettings->where('is_active', true)->count() > 0 ? 'Active' : 'Failed';
+        }
+
         return view('smtp.index', [
             'smtpSettings' => $smtpSettings,
             'totalSmtp' => $smtpSettings->count(),
             'activeSmtp' => $smtpSettings->where('is_active', true)->count(),
+            'smtpStatus' => $smtpStatus,
             'usageStats' => [
                 'sent_today' => SMTPAccount::ownedBy($userId)->sum('sent_today'),
                 'sent_this_month' => 0,

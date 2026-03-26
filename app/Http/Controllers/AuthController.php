@@ -2,78 +2,76 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Socialite\Facades\Socialite;
-use App\Models\User;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // Show Login Form
     public function showLoginForm()
     {
         return view('auth.login');
     }
 
-    // Show Register Form
     public function showRegisterForm()
     {
         return view('auth.register');
     }
 
-    // Handle Email Login - FIXED SYNTAX
     public function login(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required'
+            'password' => 'required',
         ]);
 
-        $credentials = $request->only('email', 'password');
-        $remember = $request->has('remember');
-
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-            return redirect()->route('dashboard')->with('success', 'Login successful!');
+        if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+            return back()->withErrors(['email' => 'Invalid credentials.'])->withInput($request->except('password'));
         }
 
-        return back()->withErrors([
-            'email' => 'Invalid credentials. Please check your email and password.',
-        ])->withInput($request->except('password'));
+        $request->session()->regenerate();
+        $user = $request->user();
+
+        if (!$user->hasPaid()) {
+            return redirect()->route('payment');
+        }
+
+        if (!$user->hasPaidAccess()) {
+            return redirect()->route('otp.notice');
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Login successful!');
     }
 
-    // Handle Registration
     public function register(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'payment_status' => 'unpaid',
+            'is_paid' => false,
+            'license_status' => 'pending',
         ]);
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Account created successfully!');
+        return redirect()->route('payment')->with('success', 'Account created. Complete payment to continue.');
     }
 
-    // Forgot Password
     public function forgotPassword(Request $request)
     {
         $request->validate(['email' => 'required|email']);
-        
-        // Add password reset logic here
         return back()->with('status', 'Password reset link sent!');
     }
 
-    // Reset Password
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -81,18 +79,16 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required|min:8|confirmed',
         ]);
-        
-        // Add password reset logic here
+
         return redirect()->route('login')->with('status', 'Password reset successfully!');
     }
 
-    // Logout
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
+
         return redirect()->route('login')->with('success', 'Logged out successfully!');
     }
 }
