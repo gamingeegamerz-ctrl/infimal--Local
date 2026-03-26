@@ -11,21 +11,30 @@ class TrackingController extends Controller
 {
     public function openById(int $id): Response
     {
-        EmailLog::whereKey($id)->update(['opened' => true]);
+        EmailLog::whereKey($id)
+            ->whereNull('opened_at')
+            ->update([
+                'opened' => true,
+                'opened_at' => now(),
+            ]);
 
         return $this->pixel();
     }
 
     public function clickById(Request $request, int $id): RedirectResponse
     {
-        EmailLog::whereKey($id)->update(['clicked' => true]);
+        EmailLog::whereKey($id)
+            ->whereNull('clicked_at')
+            ->update([
+                'clicked' => true,
+                'clicked_at' => now(),
+            ]);
 
         $url = (string) $request->query('url', '/');
 
         return redirect()->away($url);
     }
 
-    // Backward-compatible endpoints used by existing links/routes
     public function trackOpen(Request $request): Response
     {
         if ($request->filled('id')) {
@@ -46,6 +55,19 @@ class TrackingController extends Controller
 
     public function trackBounce(Request $request)
     {
+        $request->validate([
+            'message_id' => ['required', 'string'],
+            'reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        EmailLog::where('message_id', $request->message_id)
+            ->whereNull('bounced_at')
+            ->update([
+                'status' => 'bounced',
+                'bounced_at' => now(),
+                'error_message' => $request->reason,
+            ]);
+
         return response()->json(['success' => true]);
     }
 

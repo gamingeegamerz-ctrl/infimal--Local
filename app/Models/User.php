@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -13,14 +15,21 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'google_id',
         'payment_status',
+        'is_paid',
         'plan_name',
         'paid_at',
+        'license_key',
+        'otp_code',
+        'otp_expires_at',
+        'otp_verified_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'otp_code',
     ];
 
     protected $casts = [
@@ -28,30 +37,53 @@ class User extends Authenticatable
         'paid_at' => 'datetime',
         'payment_date' => 'datetime',
         'plan_expiry_date' => 'datetime',
+        'is_paid' => 'boolean',
+        'otp_expires_at' => 'datetime',
+        'otp_verified_at' => 'datetime',
     ];
 
-    public function campaigns()
+    public function campaigns(): HasMany
     {
         return $this->hasMany(Campaign::class, 'user_id');
     }
 
-    public function lists()
+    public function subscriberLists(): HasMany
     {
         return $this->hasMany(MailingList::class, 'user_id');
     }
 
-    public function mailingLists()
+    public function lists(): HasMany
     {
-        return $this->lists();
+        return $this->subscriberLists();
     }
 
-    public function subscribers()
+    public function mailingLists(): HasMany
+    {
+        return $this->subscriberLists();
+    }
+
+    public function subscribers(): HasMany
     {
         return $this->hasMany(Subscriber::class, 'user_id');
     }
 
+    public function license(): HasOne
+    {
+        return $this->hasOne(License::class, 'user_id');
+    }
+
     public function hasPaid(): bool
     {
-        return in_array((string) $this->payment_status, ['paid'], true) || !is_null($this->paid_at);
+        return (bool) $this->is_paid || in_array((string) $this->payment_status, ['paid'], true) || !is_null($this->paid_at);
+    }
+
+    public function hasPaidAccess(): bool
+    {
+        $license = $this->license;
+
+        return $this->hasPaid()
+            && $license
+            && ($license->status === 'active' || $license->is_active)
+            && !is_null($this->otp_verified_at);
     }
 }
