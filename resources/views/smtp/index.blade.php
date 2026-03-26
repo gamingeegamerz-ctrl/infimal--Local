@@ -165,7 +165,7 @@
                             <div>
                                 <p class="text-white/80 text-base font-medium leading-normal">SMTP Configurations</p>
                                 <p class="text-white tracking-light text-3xl font-bold leading-tight">{{ $totalSmtp }}</p>
-                                <p class="text-green-400 text-sm font-medium leading-normal">{{ $activeSmtp }} active</p>
+                                <p class="text-green-400 text-sm font-medium leading-normal">{{ $smtpStatusCounts['active'] ?? 0 }} active</p>
                             </div>
                             <div class="p-3 rounded-full bg-blue-500/20">
                                 <span class="material-symbols-outlined text-blue-500">dns</span>
@@ -179,7 +179,7 @@
                             <div>
                                 <p class="text-white/80 text-base font-medium leading-normal">Sent Today</p>
                                 <p class="text-white tracking-light text-3xl font-bold leading-tight">{{ number_format($usageStats['sent_today']) }}</p>
-                                <p class="text-blue-400 text-sm font-medium leading-normal">Real-time count</p>
+                                <p class="text-blue-400 text-sm font-medium leading-normal">{{ $smtpStatusCounts['failed'] ?? 0 }} failed</p>
                             </div>
                             <div class="p-3 rounded-full bg-green-500/20">
                                 <span class="material-symbols-outlined text-green-500">send</span>
@@ -193,7 +193,7 @@
                             <div>
                                 <p class="text-white/80 text-base font-medium leading-normal">This Month</p>
                                 <p class="text-white tracking-light text-3xl font-bold leading-tight">{{ number_format($usageStats['sent_this_month']) }}</p>
-                                <p class="text-purple-400 text-sm font-medium leading-normal">Monthly usage</p>
+                                <p class="text-purple-400 text-sm font-medium leading-normal">{{ $smtpStatusCounts['not_connected'] ?? 0 }} not connected</p>
                             </div>
                             <div class="p-3 rounded-full bg-purple-500/20">
                                 <span class="material-symbols-outlined text-purple-500">calendar_month</span>
@@ -255,10 +255,12 @@
                                 @foreach($smtpSettings as $smtp)
                                 <tr class="border-b border-white/5 hover:bg-white/5">
                                     <td class="p-4">
-                                        @if($smtp->is_active)
+                                        @if(($smtp->smtp_status ?? null) === 'active')
                                         <span class="px-3 py-1 rounded-full text-xs bg-green-500/20 text-green-400">Active</span>
+                                        @elseif(($smtp->smtp_status ?? null) === 'failed')
+                                        <span class="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-400">Failed</span>
                                         @else
-                                        <span class="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-400">Inactive</span>
+                                        <span class="px-3 py-1 rounded-full text-xs bg-gray-500/20 text-gray-300">Not Connected</span>
                                         @endif
                                     </td>
                                     <td class="p-4">
