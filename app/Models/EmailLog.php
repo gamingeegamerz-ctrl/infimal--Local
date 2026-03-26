@@ -15,9 +15,14 @@ class EmailLog extends Model
         'smtp_id',
         'recipient_email',
         'to_email',
+        'subject',
+        'content',
         'status',
         'opened',
         'clicked',
+        'opened_at',
+        'clicked_at',
+        'bounced_at',
         'message_id',
         'error_message',
     ];
@@ -25,5 +30,8 @@ class EmailLog extends Model
     protected $casts = [
         'opened' => 'boolean',
         'clicked' => 'boolean',
+        'opened_at' => 'datetime',
+        'clicked_at' => 'datetime',
+        'bounced_at' => 'datetime',
     ];
 }

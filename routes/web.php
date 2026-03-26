@@ -17,6 +17,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\OtpVerificationController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 
@@ -89,6 +90,12 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+
+Route::middleware('auth')->group(function () {
+    Route::get('/verify-otp', [OtpVerificationController::class, 'showForm'])->name('otp.verify.form');
+    Route::post('/verify-otp', [OtpVerificationController::class, 'verify'])->name('otp.verify.submit');
+});
+
 // Tracking (public routes - no auth required)
 Route::get('/track/open/{id}.png', [TrackingController::class, 'openById'])->name('track.open.id');
 Route::get('/track/click/{id}', [TrackingController::class, 'clickById'])->name('track.click.id');
@@ -96,11 +103,13 @@ Route::get('/track/open', [TrackingController::class, 'trackOpen'])->name('track
 Route::get('/track/click', [TrackingController::class, 'trackClick'])->name('track.click');
 Route::get('/track/unsubscribe', [TrackingController::class, 'unsubscribe'])->name('track.unsubscribe');
 Route::post('/track/bounce', [TrackingController::class, 'trackBounce'])->name('track.bounce');
+Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook.public');
 
 // =================== PROTECTED ROUTES ===================
 
 Route::middleware(['auth'])->group(function () {
     
+    Route::middleware('infimal.access')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // WORKSPACES
@@ -149,11 +158,10 @@ Route::middleware(['auth'])->group(function () {
     
     // BILLING
     Route::get('/billing', [BillingController::class, 'index'])->name('billing');
+    });
     
     // ✅✅✅ PAYMENT - PAYPAL INTEGRATED ✅✅✅
-    Route::get('/payment', function () {
-        return view('payments.checkout');
-    })->name('payment');
+    Route::get('/payment', [PaymentController::class, 'checkout'])->name('payment');
     
     
     Route::post('/paypal/create-order', [PayPalController::class, 'createOrder']);
@@ -163,6 +171,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/payment/create-checkout', [PaymentController::class, 'processPaddleCheckout'])->name('payment.create');
     Route::post('/payment/process', [PaymentController::class, 'processPaddleCheckout'])->name('payment.process');
     
+    Route::middleware('infimal.access')->group(function () {
     // PROFILE
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('index');
@@ -199,6 +208,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/recent-activity', [DashboardController::class, 'getRecentActivity'])->name('recent-activity');
         Route::get('/admin/analytics/users', [AdminAnalyticsController::class, 'users'])->name('admin.analytics.users');
         Route::get('/admin/analytics/users/{userId}', [AdminAnalyticsController::class, 'userDetail'])->name('admin.analytics.user-detail');
+    });
     });
 });
 
