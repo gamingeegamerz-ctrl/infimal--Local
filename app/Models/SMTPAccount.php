@@ -23,6 +23,9 @@ class SMTPAccount extends Model
         'warmup_enabled',
         'is_default',
         'is_active',
+        'last_test_status',
+        'last_tested_at',
+        'last_error_message',
         // compatibility aliases
         'host',
         'port',
@@ -40,6 +43,7 @@ class SMTPAccount extends Model
         'daily_limit' => 'integer',
         'per_minute_limit' => 'integer',
         'smtp_port' => 'integer',
+        'last_tested_at' => 'datetime',
     ];
 
     public function setSmtpPasswordAttribute(?string $password): void
