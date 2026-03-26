@@ -2,74 +2,65 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class MessageController extends Controller
 {
     public function index()
     {
         $userId = Auth::id();
-        
-        try {
-            // Check if messages table exists
-            $tableExists = DB::select("SHOW TABLES LIKE 'messages'");
-            
-            if (empty($tableExists)) {
-                // Create messages table if not exists
-                $this->createMessagesTable();
-            }
-            
-            // Get real messages
-            $messages = DB::table('messages')
-                ->where('user_id', $userId)
-                ->orderBy('created_at', 'desc')
-                ->paginate(15);
-            
-            // Get counts
-            $totalMessages = DB::table('messages')
-                ->where('user_id', $userId)
-                ->count();
-            
-            $unreadMessages = DB::table('messages')
-                ->where('user_id', $userId)
-                ->where('is_read', false)
-                ->count();
-            
-            return view('messages.index', [
-                'messages' => $messages,
-                'totalMessages' => $totalMessages,
-                'unreadMessages' => $unreadMessages
-            ]);
-            
-        } catch (\Exception $e) {
+
+        if (!Schema::hasTable('messages')) {
             return view('messages.index', [
                 'messages' => collect([]),
+                'stats' => $this->emptyStats($userId),
                 'totalMessages' => 0,
-                'unreadMessages' => 0
+                'unreadMessages' => 0,
+                'emailsSent' => DB::table('email_logs')->where('user_id', $userId)->count(),
+                'queueStatus' => 'Not configured',
             ]);
         }
+
+        $messages = DB::table('messages')->where('user_id', $userId)->latest()->paginate(15);
+        $todayCount = DB::table('messages')->where('user_id', $userId)->whereDate('created_at', today())->count();
+
+        $stats = [
+            'totalMessages' => DB::table('messages')->where('user_id', $userId)->count(),
+            'unreadCount' => DB::table('messages')->where('user_id', $userId)->where('is_read', false)->count(),
+            'systemMessagesCount' => DB::table('messages')->where('user_id', $userId)->where('type', 'system')->count(),
+            'todayMessagesCount' => $todayCount,
+            'campaignAlertsCount' => DB::table('messages')->where('user_id', $userId)->where('type', 'alert')->count(),
+            'highPriorityCount' => 0,
+            'thisMonthCount' => DB::table('messages')->where('user_id', $userId)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(),
+            'growthRate' => 0,
+        ];
+
+        return view('messages.index', [
+            'messages' => $messages,
+            'stats' => $stats,
+            'totalMessages' => $stats['totalMessages'],
+            'unreadMessages' => $stats['unreadCount'],
+            'emailsSent' => DB::table('email_logs')->where('user_id', $userId)->count(),
+            'queueStatus' => Schema::hasTable('jobs') ? 'Active' : 'Not configured',
+        ]);
     }
-    
-    private function createMessagesTable()
+
+    private function emptyStats(int $userId): array
     {
-        DB::statement("
-            CREATE TABLE IF NOT EXISTS messages (
-                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                user_id BIGINT UNSIGNED NOT NULL,
-                subject VARCHAR(255) NOT NULL,
-                content TEXT NOT NULL,
-                type ENUM('system', 'notification', 'alert') DEFAULT 'notification',
-                is_read BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP NULL,
-                updated_at TIMESTAMP NULL,
-                INDEX messages_user_id_index (user_id),
-                INDEX messages_is_read_index (is_read)
-            )
-        ");
+        return [
+            'totalMessages' => 0,
+            'unreadCount' => 0,
+            'systemMessagesCount' => 0,
+            'todayMessagesCount' => 0,
+            'campaignAlertsCount' => 0,
+            'highPriorityCount' => 0,
+            'thisMonthCount' => 0,
+            'growthRate' => 0,
+        ];
     }
-    
+
     public function create()
     {
         return view('messages.create');

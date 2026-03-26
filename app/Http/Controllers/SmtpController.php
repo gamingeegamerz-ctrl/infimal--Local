@@ -6,6 +6,7 @@ use App\Models\SMTPAccount;
 use App\Services\SmtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SmtpController extends Controller
 {
@@ -18,17 +19,35 @@ class SmtpController extends Controller
         $userId = Auth::id();
         $smtpSettings = SMTPAccount::ownedBy($userId)->latest()->get();
 
+        $activeSmtp = $smtpSettings->where('is_active', true)->count();
+        $failedSmtp = $smtpSettings->where('last_test_status', 'failed')->count();
+        $notConnectedSmtp = $smtpSettings->whereNull('last_test_status')->count();
+
         return view('smtp.index', [
             'smtpSettings' => $smtpSettings,
             'totalSmtp' => $smtpSettings->count(),
-            'activeSmtp' => $smtpSettings->where('is_active', true)->count(),
+            'activeSmtp' => $activeSmtp,
+            'failedSmtp' => $failedSmtp,
+            'notConnectedSmtp' => $notConnectedSmtp,
             'usageStats' => [
-                'sent_today' => SMTPAccount::ownedBy($userId)->sum('sent_today'),
-                'sent_this_month' => 0,
-                'total_sent' => 0,
-                'success_rate' => 0,
+                'sent_today' => DB::table('email_logs')->where('user_id', $userId)->whereDate('created_at', today())->count(),
+                'sent_this_month' => DB::table('email_logs')->where('user_id', $userId)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(),
+                'total_sent' => DB::table('email_logs')->where('user_id', $userId)->where('status', 'sent')->count(),
+                'success_rate' => $this->successRate($userId),
             ],
         ]);
+    }
+
+    private function successRate(int $userId): float
+    {
+        $total = DB::table('email_logs')->where('user_id', $userId)->count();
+        if ($total === 0) {
+            return 0;
+        }
+
+        $sent = DB::table('email_logs')->where('user_id', $userId)->where('status', 'sent')->count();
+
+        return round(($sent / $total) * 100, 2);
     }
 
     public function store(Request $request)
@@ -47,7 +66,8 @@ class SmtpController extends Controller
             'warmup_enabled' => 'nullable|boolean',
         ]);
 
-        $this->smtpService->saveForUser(Auth::id(), $data);
+        $smtp = $this->smtpService->saveForUser(Auth::id(), $data);
+        $smtp->update(['last_test_status' => null, 'last_tested_at' => null]);
 
         return back()->with('success', 'SMTP added successfully.');
     }
@@ -72,7 +92,7 @@ class SmtpController extends Controller
             'host' => 'required|string|max:255',
             'port' => 'required|integer|min:1|max:65535',
             'username' => 'required|string|max:255',
-            'password' => 'nullable|string|max:1000',  // ✅ Nullable for updates
+            'password' => 'nullable|string|max:1000',
             'encryption' => 'required|in:tls,ssl,none',
             'from_address' => 'nullable|email|max:255',
             'from_name' => 'nullable|string|max:255',
@@ -81,7 +101,7 @@ class SmtpController extends Controller
             'warmup_enabled' => 'nullable|boolean',
         ]);
 
-        $this->smtpService->saveForUser(Auth::id(), $data, $smtp);  // ✅ Pass $smtp for update
+        $this->smtpService->saveForUser(Auth::id(), $data, $smtp);
 
         return back()->with('success', 'SMTP updated successfully.');
     }
@@ -93,6 +113,12 @@ class SmtpController extends Controller
         $target = $data['email'] ?? Auth::user()->email;
 
         $result = $this->smtpService->testConnection($smtpModel, $target);
+
+        $smtpModel->update([
+            'last_test_status' => $result['success'] ? 'active' : 'failed',
+            'last_tested_at' => now(),
+            'is_active' => $result['success'],
+        ]);
 
         return response()->json($result, $result['success'] ? 200 : 422);
     }
@@ -107,13 +133,7 @@ class SmtpController extends Controller
 
     public function verify(string $smtp)
     {
-        $smtpModel = SMTPAccount::ownedBy(Auth::id())->findOrFail($smtp);
-        $result = $this->smtpService->testConnection($smtpModel, Auth::user()->email);
-
-        return response()->json([
-            'verified' => $result['success'],
-            'message' => $result['message'],
-        ], $result['success'] ? 200 : 422);
+        return $this->test(request(), $smtp);
     }
 
     public function getCredentials()
