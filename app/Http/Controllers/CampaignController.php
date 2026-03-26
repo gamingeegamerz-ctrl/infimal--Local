@@ -24,6 +24,11 @@ class CampaignController extends Controller
         // Get stats
         $totalCampaigns = $campaigns->count();
         $sentCampaigns = $campaigns->where('status', 'sent')->count();
+        $activeCampaigns = $campaigns->whereIn('status', ['scheduled', 'sending'])->count();
+        $sentCount = DB::table('email_logs')
+            ->where('user_id', Auth::id())
+            ->whereIn('status', ['sent', 'delivered'])
+            ->count();
         $draftCampaigns = $campaigns->where('status', 'draft')->count();
         $scheduledCampaigns = $campaigns->where('status', 'scheduled')->count();
         
@@ -31,6 +36,8 @@ class CampaignController extends Controller
             'campaigns',
             'totalCampaigns',
             'sentCampaigns',
+            'sentCount',
+            'activeCampaigns',
             'draftCampaigns',
             'scheduledCampaigns'
         ));

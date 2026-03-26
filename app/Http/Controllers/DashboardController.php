@@ -57,6 +57,7 @@ class DashboardController extends Controller
             'campaignLabels' => [],
             'campaignOpens' => [],
             'campaignClicks' => [],
+            'smtpStatus' => 'Not Connected',
         ];
         
         try {
@@ -292,6 +293,25 @@ class DashboardController extends Controller
             
             $data['unsubscribeRate'] = $data['totalSubscribers'] > 0 ? 
                 round(($totalUnsubscribes / $data['totalSubscribers']) * 100, 2) : 0;
+
+            $defaultSmtp = DB::table('smtps')
+                ->where('user_id', $user->id)
+                ->orderByDesc('is_default')
+                ->orderByDesc('id')
+                ->first();
+
+            if (!$defaultSmtp) {
+                $data['smtpStatus'] = 'Not Connected';
+            } elseif (!(bool) $defaultSmtp->is_active) {
+                $data['smtpStatus'] = 'Failed';
+            } else {
+                $recentFailure = DB::table('email_logs')
+                    ->where('smtp_id', $defaultSmtp->id)
+                    ->where('status', 'failed')
+                    ->where('created_at', '>=', now()->subDay())
+                    ->exists();
+                $data['smtpStatus'] = $recentFailure ? 'Failed' : 'Active';
+            }
             
         } catch (\Exception $e) {
             \Log::error('Dashboard analytics error: ' . $e->getMessage());
