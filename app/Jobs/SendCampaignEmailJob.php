@@ -14,6 +14,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Throwable;
 
 class SendCampaignEmailJob implements ShouldQueue
@@ -56,16 +57,20 @@ class SendCampaignEmailJob implements ShouldQueue
         }
 
         $htmlContent = $emailJob->html ?? $emailJob->body;
-        if ($emailJob->campaign_id) {
-            $trackingSeed = $engine->createLog([
-                'user_id' => $emailJob->user_id,
-                'campaign_id' => $emailJob->campaign_id,
-                'smtp_id' => $smtp->id,
-                'recipient_email' => $emailJob->to_email,
-                'to_email' => $emailJob->to_email,
-                'status' => 'pending',
-            ]);
+        $messageId = (string) Str::uuid();
 
+        $trackingSeed = $engine->createLog([
+            'user_id' => $emailJob->user_id,
+            'campaign_id' => $emailJob->campaign_id,
+            'smtp_id' => $smtp->id,
+            'recipient_email' => $emailJob->to_email,
+            'to_email' => $emailJob->to_email,
+            'subject' => $emailJob->subject,
+            'status' => 'pending',
+            'message_id' => $messageId,
+        ]);
+
+        if ($emailJob->campaign_id) {
             $htmlContent = TrackingController::processEmailContent($htmlContent, $trackingSeed->id);
         }
 
@@ -98,8 +103,9 @@ class SendCampaignEmailJob implements ShouldQueue
                 'smtp_id' => $smtp->id,
                 'recipient_email' => $emailJob->to_email,
                 'to_email' => $emailJob->to_email,
+                'subject' => $emailJob->subject,
                 'status' => 'sent',
-                'message_id' => $emailJob->id . '-' . now()->timestamp,
+                'message_id' => $messageId,
             ]);
 
             if ($emailJob->campaign_id) {
@@ -121,8 +127,10 @@ class SendCampaignEmailJob implements ShouldQueue
                 'smtp_id' => $smtp->id,
                 'recipient_email' => $emailJob->to_email,
                 'to_email' => $emailJob->to_email,
+                'subject' => $emailJob->subject,
                 'status' => $emailJob->retry_count >= $this->tries ? 'bounced' : 'failed',
                 'error_message' => substr($e->getMessage(), 0, 1000),
+                'message_id' => $messageId,
             ]);
 
             if ($emailJob->retry_count < $this->tries) {

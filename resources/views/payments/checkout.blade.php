@@ -84,7 +84,7 @@
             <div class="text-center fade-in mb-16">
                 <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                     Upgrade to 
-                    <span class="rainbow-text block">Agency Lifetime</span>
+                    <span class="rainbow-text block">InfiMal Pro</span>
                 </h1>
                 <p class="text-xl lg:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
                     Get unlimited email campaigns with professional warmup, real analytics, and lifetime access to all premium features.
@@ -101,7 +101,7 @@
                     <div class="p-8 md:p-12">
                         <!-- Plan Info -->
                         <div class="text-center mb-10">
-                            <h3 class="text-3xl font-bold text-gray-900 mb-2">Agency Lifetime Plan</h3>
+                            <h3 class="text-3xl font-bold text-gray-900 mb-2">InfiMal Pro</h3>
                             <div class="flex items-baseline justify-center mb-6">
                                 <span class="text-6xl font-bold text-gray-900">$299</span>
                                 <span class="text-gray-600 text-xl ml-2">one-time payment</span>
@@ -170,7 +170,7 @@
                             
                             <!-- PayPal Button -->
                             <button id="payBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-5 rounded-xl text-lg transition-all duration-200 hover-glow hover:shadow-xl mb-4">
-                                Pay $299 with PayPal
+                                Pay Now - $299
                             </button>
                             
                             <div id="paypal-container" style="display:none;"></div>
@@ -304,7 +304,7 @@
                             amount: {
                                 value: '299.00'
                             },
-                            description: 'InfiMal Agency Lifetime Plan'
+                            description: 'InfiMal InfiMal Pro'
                         }]
                     });
                 },

@@ -6,6 +6,7 @@ use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class GoogleAuthController extends Controller
 {
@@ -34,7 +35,7 @@ class GoogleAuthController extends Controller
                     'name'       => $googleUser->getName(),
                     'email'      => $googleUser->getEmail(),
                     'google_id'  => $googleUser->getId(),
-                    'password'   => bcrypt(Str::random(16)),
+                    'password'   => Hash::make(Str::password(32, true, true, true, false)),
                     // IMPORTANT DEFAULTS
                     'payment_status' => 'unpaid',
                     'license_key'    => null,
@@ -60,7 +61,7 @@ class GoogleAuthController extends Controller
             }
 
             // ? Paid user ? Dashboard
-            return redirect()->route('dashboard')
+            return redirect()->route('otp.notice')
                 ->with('success', 'Welcome ' . $user->name . '!');
 
         } catch (\Exception $e) {

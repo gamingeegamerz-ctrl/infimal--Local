@@ -9,18 +9,22 @@ class EnsureInfimalAccess
 {
     public function handle(Request $request, Closure $next)
     {
-        $user = auth()->user();
+        $user = $request->user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
         if (!$user->hasPaid()) {
-            return redirect()->route('payment.checkout');
+            return redirect()->route('payment')->with('error', 'Payment is required before dashboard access.');
         }
 
-        if (!$user->hasVerifiedEmail()) {
-            return redirect()->route('verification.notice');
+        if (is_null($user->otp_verified_at)) {
+            return redirect()->route('otp.notice')->with('error', 'Please verify your email OTP first.');
         }
 
-        if (empty($user->license_key)) {
-            abort(403, 'License key missing');
+        if (!$user->hasPaidAccess()) {
+            return redirect()->route('payment')->with('error', 'Your license is missing or inactive.');
         }
 
         return $next($request);
