@@ -13,6 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class SendCampaignEmailJob implements ShouldQueue
 {
@@ -39,6 +40,18 @@ class SendCampaignEmailJob implements ShouldQueue
             return;
         }
 
+        $existingLog = EmailLog::where('user_id', $emailJob->user_id)
+            ->where('campaign_id', $emailJob->campaign_id)
+            ->where('to_email', $emailJob->to_email)
+            ->latest('id')
+            ->first();
+
+        if ($existingLog && in_array($existingLog->status, ['sent', 'delivered'], true)) {
+            $emailJob->update(['status' => 'sent', 'sent_at' => $existingLog->sent_at ?? now(), 'smtp_id' => $existingLog->smtp_id]);
+            return;
+        }
+
+        $messageId = $existingLog?->message_id ?: (string) Str::uuid();
         $messageId = 'infimal-job-' . $emailJob->id;
         $messageId = 'job-' . $emailJob->id;
 

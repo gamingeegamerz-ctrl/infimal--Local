@@ -50,6 +50,29 @@ Route::post('/track/bounce', [TrackingController::class, 'trackBounce'])->name('
 Route::get('/track/unsubscribe', [TrackingController::class, 'unsubscribe'])->name('track.unsubscribe');
 
 Route::post('/webhooks/paypal', [PaymentController::class, 'paypalWebhook'])->name('payment.webhook.paypal');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/verify-otp', [PaymentController::class, 'showOtpForm'])->name('otp.verify.form');
+    Route::post('/verify-otp', [PaymentController::class, 'verifyOtp'])->name('otp.verify.submit');
+    Route::post('/verify-otp/resend', [PaymentController::class, 'resendOtp'])->name('otp.verify.resend');
+});
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/payment', function () {
+        return view('payments.checkout');
+    })->name('payment');
+    Route::post('/paypal/create-order', [PayPalController::class, 'createOrder']);
+    Route::post('/paypal/capture-order/{orderId}', [PayPalController::class, 'captureOrder']);
+    Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+    Route::post('/payment/create-checkout', [PaymentController::class, 'processPaddleCheckout'])->name('payment.create');
+    Route::post('/payment/process', [PaymentController::class, 'processPaddleCheckout'])->name('payment.process');
+});
+
+// =================== PROTECTED ROUTES ===================
+
+Route::middleware(['auth','paid.access'])->group(function () {
 Route::middleware('auth')->group(function (): void {
     Route::get('/billing', [BillingController::class, 'index'])->name('billing');
     Route::match(['GET', 'POST'], '/billing/checkout', [PaymentController::class, 'createOrder'])->name('billing.checkout')->middleware('throttle:10,1');

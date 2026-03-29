@@ -73,6 +73,9 @@ class TrackingController extends Controller
     public function trackOpen(Request $request): Response
     {
         return $request->filled('id') ? $this->openById((int) $request->query('id')) : $this->pixel();
+    public function trackOpen(Request $request): Response
+    {
+        return $request->filled('id') ? $this->openById((int) $request->query('id')) : $this->pixel();
         $log = EmailLog::find($id);
         if ($log) {
 

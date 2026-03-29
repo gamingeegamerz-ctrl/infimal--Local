@@ -23,6 +23,9 @@ class User extends Authenticatable
         'paid_at',
         'license_key',
         'license_status',
+        'paid_at',
+        'license_key',
+        'license_status',
         'avatar',
         'timezone',
         'phone',
@@ -77,6 +80,15 @@ class User extends Authenticatable
     }
 
     public function lists(): HasMany
+    {
+        return $this->subscriberLists();
+    }
+
+    public function mailingLists(): HasMany
+    {
+        return $this->subscriberLists();
+    }
+
     public function mailingLists(): HasMany
     {
         return $this->subscriberLists();
@@ -137,6 +149,8 @@ class User extends Authenticatable
         return (bool) ($this->is_paid || in_array((string) $this->payment_status, ['paid'], true) || !is_null($this->paid_at));
     }
 
+    public function hasActiveLicense(): bool
+    {
     public function hasPaidAccess(): bool
     {
         $paid = (bool) $this->is_paid;
@@ -172,6 +186,7 @@ class User extends Authenticatable
             || ((string) $this->license_status === 'active' && !empty($this->license_key));
     }
 
+    public function isOtpRequired(): bool
     public function otpRequired(): bool
     {
         return !is_null($this->otp_code) || !is_null($this->otp_expires_at);
@@ -181,6 +196,7 @@ class User extends Authenticatable
     {
         return $this->hasPaid()
             && $this->hasActiveLicense()
+            && (!$this->isOtpRequired() || !is_null($this->otp_verified_at));
             && (!$this->otpRequired() || !is_null($this->otp_verified_at));
     }
 }

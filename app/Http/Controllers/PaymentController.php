@@ -76,6 +76,7 @@ class PaymentController extends Controller
             ]
         );
 
+        $licenseKey = $user->license_key ?: 'INFIMAL-' . strtoupper(Str::random(24));
         $licenseKey = 'INFIMAL-' . strtoupper(Str::random(24));
 
         License::updateOrCreate(
@@ -89,6 +90,7 @@ class PaymentController extends Controller
             ]
         );
 
+        $otp = (string) random_int(100000, 999999);
         $otp = $this->issueOtp($user);
 
         $user->update([
@@ -98,6 +100,9 @@ class PaymentController extends Controller
             'license_key' => $licenseKey,
             'license_status' => 'active',
             'transaction_id' => $captureId,
+            'otp_code' => bcrypt($otp),
+            'otp_expires_at' => now()->addMinutes(15),
+            'otp_verified_at' => null,
             'otp_code' => $user->otp_code,
             'otp_expires_at' => $user->otp_expires_at,
             'otp_verified_at' => null,
@@ -465,6 +470,8 @@ class PaymentController extends Controller
 
         Mail::to($user->email)->queue(new PaidWelcomeOtpMail($user, $otp));
 
+        Mail::to($user->email)->queue(new PaidWelcomeOtpMail($user, $otp));
+
         return response('OK', 200);
     public function success(Request $request): RedirectResponse
     {
@@ -634,6 +641,15 @@ class PaymentController extends Controller
         return view('auth.verify-otp');
     }
 
+    public function resendOtp(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->hasPaid() || !$user->hasActiveLicense()) {
+            return redirect()->route('payment')->withErrors(['otp' => 'Payment verification is still pending.']);
+        }
+
+        $otp = (string) random_int(100000, 999999);
     public function verifyOtp(Request $request)
     {
         $request->validate(['otp' => 'required|digits:6']);
@@ -746,6 +762,11 @@ class PaymentController extends Controller
         ]);
 
         Mail::to($user->email)->queue(new PaidWelcomeOtpMail($user, $otp));
+
+        return back()->with('success', 'A new OTP has been sent to your email.');
+    }
+
+    public function verifyOtp(Request $request)
     }
 
     public function showOtpForm(): View
@@ -759,6 +780,25 @@ class PaymentController extends Controller
 
         $user = $request->user();
 
+        if (!$user->isOtpRequired()) {
+            return redirect()->route('dashboard');
+        }
+
+        if (!$user->otp_expires_at || now()->greaterThan($user->otp_expires_at)) {
+            return back()->withErrors(['otp' => 'OTP expired. Please request a new code.']);
+        }
+
+        if (!password_verify((string) $request->input('otp'), (string) $user->otp_code)) {
+            return back()->withErrors(['otp' => 'Invalid OTP code.']);
+        }
+
+        $user->update([
+            'otp_verified_at' => now(),
+            'otp_code' => null,
+            'otp_expires_at' => null,
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'OTP verified successfully.');
         if (!password_verify($request->otp, $user->otp_code)) {
             return back()->withErrors(['otp' => 'Invalid OTP']);
         }

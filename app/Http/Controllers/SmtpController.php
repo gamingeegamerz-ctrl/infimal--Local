@@ -136,6 +136,7 @@ class SmtpController extends Controller
 
         $result = $this->smtpService->testConnection($smtpModel, $target);
 
+        $smtpModel->update(['is_active' => $result['success']]);
         if (!$result['success']) {
             $smtpModel->update(['is_active' => false]);
         }
@@ -144,6 +145,14 @@ class SmtpController extends Controller
         $smtpModel->update(['is_active' => (bool) $result['success']]);
 
         return response()->json($result + ['status' => $result['success'] ? 'Active' : 'Failed'], $result['success'] ? 200 : 422);
+    }
+
+    public function toggle(string $smtp)
+    {
+        $smtpModel = SMTPAccount::ownedBy(Auth::id())->findOrFail($smtp);
+        $smtpModel->update(['is_active' => !$smtpModel->is_active]);
+
+        return response()->json(['success' => true, 'status' => $smtpModel->is_active ? 'Active' : 'Failed']);
     }
 
     public function toggle(string $smtp)
@@ -174,6 +183,7 @@ class SmtpController extends Controller
     {
         $smtpModel = SMTPAccount::ownedBy(Auth::id())->findOrFail($smtp);
         $result = $this->smtpService->testConnection($smtpModel, Auth::user()->email);
+        $smtpModel->update(['is_active' => $result['success']]);
 
         return response()->json([
             'verified' => $result['success'],
