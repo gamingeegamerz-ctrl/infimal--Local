@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SMTPAccount;
 use App\Services\SmtpService;
 use Illuminate\Http\Request;
+use App\Models\EmailLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 

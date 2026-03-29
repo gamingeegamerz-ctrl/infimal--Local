@@ -72,9 +72,9 @@ Route::get('/help-center', function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:6,1');
     Route::get('/forgot-password', function () {
         return view('auth.forgot-password');
     })->name('password.request');
@@ -98,6 +98,7 @@ Route::get('/track/unsubscribe', [TrackingController::class, 'unsubscribe'])->na
 Route::post('/track/bounce', [TrackingController::class, 'trackBounce'])->name('track.bounce');
 
 Route::post('/webhooks/paypal', [PaymentController::class, 'paypalWebhook'])->name('payment.webhook.paypal');
+Route::post('/webhook/paddle', [PaymentController::class, 'handleWebhook'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/verify-otp', [PaymentController::class, 'showOtpForm'])->name('otp.verify.form');
@@ -105,10 +106,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/verify-otp/resend', [PaymentController::class, 'resendOtp'])->name('otp.verify.resend');
 });
 
-
 // =================== PROTECTED ROUTES ===================
 
-Route::middleware(['auth','paid.access'])->group(function () {
+Route::middleware(['auth', 'paid.access'])->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
@@ -156,6 +156,8 @@ Route::middleware(['auth','paid.access'])->group(function () {
     Route::post('/smtp/{smtp}/verify', [SmtpController::class, 'verify'])->name('smtp.verify');
     Route::post('/smtp/{smtp}/set-default', [SmtpController::class, 'setDefault'])->name('smtp.set-default');
     Route::post('/smtp/{smtp}/toggle', [SmtpController::class, 'toggle'])->name('smtp.toggle');
+    Route::get('/api/smtp/credentials', [SmtpController::class, 'getCredentials'])->name('api.smtp.credentials');
+    Route::get('/api/smtp/health', [SmtpController::class, 'health'])->name('api.smtp.health');
     
     // BILLING
     Route::get('/billing', [BillingController::class, 'index'])->name('billing');
@@ -165,9 +167,8 @@ Route::middleware(['auth','paid.access'])->group(function () {
         return view('payments.checkout');
     })->name('payment');
     
-    
-    Route::post('/paypal/create-order', [PayPalController::class, 'createOrder']);
-    Route::post('/paypal/capture-order/{orderId}', [PayPalController::class, 'captureOrder']);
+    Route::post('/paypal/create-order', [PayPalController::class, 'createOrder'])->name('paypal.create-order');
+    Route::post('/paypal/capture-order/{orderId}', [PayPalController::class, 'captureOrder'])->name('paypal.capture-order');
     
     Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
     Route::post('/payment/create-checkout', [PaymentController::class, 'processPaddleCheckout'])->name('payment.create');
@@ -192,6 +193,7 @@ Route::middleware(['auth','paid.access'])->group(function () {
         Route::get('/export', [AnalyticsController::class, 'export'])->name('export');
     });
     
+    // EXTRA PAGES
     Route::get('/templates', function () {
         return view('pages.templates');
     })->name('templates');
@@ -202,8 +204,6 @@ Route::middleware(['auth','paid.access'])->group(function () {
     
     // API ROUTES
     Route::prefix('api')->name('api.')->group(function () {
-        Route::get('/smtp/credentials', [SmtpController::class, 'getCredentials'])->name('smtp.credentials');
-        Route::get('/smtp/health', [SmtpController::class, 'health'])->name('smtp.health');
         Route::get('/limits', [DashboardController::class, 'getLimits'])->name('limits');
         Route::get('/stats', [DashboardController::class, 'getStats'])->name('stats');
         Route::get('/recent-activity', [DashboardController::class, 'getRecentActivity'])->name('recent-activity');
@@ -525,7 +525,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         }
     })->name('emails.bulk-delete');
     
-    // SMTP
+    // SMTP ADMIN
     Route::get('/smtp', function() use ($checkAdmin) {
         $checkAdmin();
         try {
@@ -591,9 +591,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         }
     })->name('api.stats');
 });
-
-// =================== WEBHOOK ===================
-Route::post('/webhook/paddle', [PaymentController::class, 'handleWebhook'])->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
 // =================== HEALTH ===================
 Route::get('/health', function () {
