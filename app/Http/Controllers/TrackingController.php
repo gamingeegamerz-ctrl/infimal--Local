@@ -14,6 +14,8 @@ class TrackingController extends Controller
     public function openById(int $id): Response
     {
         $log = EmailLog::find($id);
+        if ($log) {
+            $log->update(['opened' => true]);
 
         if ($log && ! $log->opened) {
             $log->update(['opened' => true]);
@@ -46,6 +48,7 @@ class TrackingController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            DB::table('campaigns')->where('id', $log->campaign_id)->increment('total_opened');
 
             DB::table('campaigns')
                 ->where('id', $log->campaign_id)
@@ -58,6 +61,7 @@ class TrackingController extends Controller
     public function clickById(Request $request, int $id): RedirectResponse
     {
         $log = EmailLog::find($id);
+        if ($log) {
 
         if ($log) {
             $firstClick = ! $log->clicked;
@@ -70,6 +74,7 @@ class TrackingController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            DB::table('campaigns')->where('id', $log->campaign_id)->increment('total_clicked');
             if ($firstClick) {
                 DB::table('campaigns')->where('id', $log->campaign_id)->increment('total_clicked');
             }
@@ -90,6 +95,18 @@ class TrackingController extends Controller
         ]);
 
         $log = EmailLog::findOrFail($validated['email_log_id']);
+        $log->update(['status' => 'bounced', 'error_message' => $validated['reason'] ?? null]);
+
+        DB::table('bounces')->insert([
+            'email_log_id' => $log->id,
+            'campaign_id' => $log->campaign_id,
+            'user_id' => $log->user_id,
+            'reason' => $validated['reason'] ?? null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('campaigns')->where('id', $log->campaign_id)->increment('total_bounced');
         if ($log->status !== 'bounced') {
             $log->update(['status' => 'bounced', 'error_message' => $validated['reason'] ?? null]);
             DB::table('bounces')->insert([

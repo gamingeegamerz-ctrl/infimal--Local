@@ -35,6 +35,11 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->route($request->user()->hasPaid() && $request->user()->hasActiveLicense() ? 'dashboard' : 'billing');
+        }
+
+        $request->session()->regenerate();
+
+        return redirect()->route($request->user()->hasPaid() && $request->user()->hasActiveLicense() ? 'dashboard' : 'billing');
             return back()
                 ->withErrors(['email' => 'Invalid credentials provided.'])
                 ->onlyInput('email');

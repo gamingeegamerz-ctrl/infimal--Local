@@ -29,6 +29,19 @@ class DashboardController extends Controller
         $clicks = (clone $logs)->where('clicked', true)->count();
         $bounces = (clone $logs)->where('status', 'bounced')->count();
 
+        if (! $user->hasPaid()) {
+            abort(403, 'Access denied. Payment required.');
+        }
+
+        $campaigns = Campaign::where('user_id', $user->id);
+        $subscribers = Subscriber::where('user_id', $user->id);
+        $logs = EmailLog::where('user_id', $user->id);
+
+        $sent = (clone $logs)->count();
+        $opens = (clone $logs)->where('opened', true)->count();
+        $clicks = (clone $logs)->where('clicked', true)->count();
+        $bounces = (clone $logs)->where('status', 'bounced')->count();
+
 
         if (! $user->hasPaid()) {
             abort(403, 'Access denied. Payment required.');

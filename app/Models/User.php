@@ -79,6 +79,11 @@ class User extends Authenticatable
         return $this->subscriberLists();
     }
 
+    public function subscriberLists(): HasMany
+    {
+        return $this->lists();
+    }
+
     public function subscribers(): HasMany
     {
         return $this->hasMany(Subscriber::class, 'user_id');
@@ -115,6 +120,7 @@ class User extends Authenticatable
 
     public function hasActiveLicense(): bool
     {
+        return $this->activeLicense()->exists() || (! empty($this->license_key) && ($this->license_status === 'active' || $this->license_status === null));
         if (! empty($this->license_key)) {
             return $this->licenses()
                 ->where('license_key', $this->license_key)

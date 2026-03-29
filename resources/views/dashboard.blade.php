@@ -288,224 +288,68 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-slate-900">
-            <!-- Top Bar -->
-            <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-10">
-                <div class="px-6 py-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1 max-w-md">
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500">search</span>
-                                <input type="text" placeholder="Search campaigns, subscribers..." class="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder-gray-500 dark:placeholder-slate-500" />
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <button onclick="window.location.href='{{ url('/campaigns/create') }}'" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold text-sm hover-glow transition-all duration-300">
-                                New Campaign
-                            </button>
-                            <button onclick="window.location.href='{{ url('/subscribers/create') }}'" class="border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 px-6 py-2 rounded-lg font-semibold text-sm hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-300">
-                                Add Subscriber
-                            </button>
-                            <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
-                                <span class="material-symbols-outlined text-gray-600 dark:text-slate-400">notifications</span>
-                            </button>
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                                {{ substr(Auth::user()->name, 0, 1) }}
-                            </div>
-                        </div>
+<div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h2 class="text-lg font-semibold">Performance overview</h2>
+        <div class="mt-6 space-y-4">
+            @foreach ([
+                'Open rate' => $stats['open_rate'],
+                'Click rate' => $stats['click_rate'],
+                'Bounce rate' => $stats['bounce_rate'],
+            ] as $label => $percent)
+                <div>
+                    <div class="mb-2 flex items-center justify-between text-sm"><span>{{ $label }}</span><span>{{ $percent }}%</span></div>
+                    <div class="h-3 rounded-full bg-slate-100 dark:bg-slate-800">
+                        <div class="h-3 rounded-full {{ $label === 'Bounce rate' ? 'bg-rose-500' : 'bg-blue-600' }}" style="width: {{ min(100, max(0, (float) $percent)) }}%"></div>
                     </div>
                 </div>
-            </header>
+            @endforeach
+        </div>
+    </section>
 
-            <div class="p-6 space-y-6">
-                <!-- Welcome Banner -->
-                <div class="glass-card rounded-2xl p-8 shadow-lg border-2 border-blue-100 dark:border-slate-700 hover-glow transition-all duration-300">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome back, {{ Auth::user()->name }}!</h1>
-                            <p class="text-gray-600 dark:text-slate-300 mb-4">Your email marketing dashboard with real-time analytics. Member since {{ Auth::user()->created_at->format('M Y') }}</p>
-                            <div class="flex items-center gap-6">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined {{ Auth::user()->email_verified_at ? 'text-green-500' : 'text-yellow-500' }} text-xl">
-                                        {{ Auth::user()->email_verified_at ? 'verified' : 'warning' }}
-                                    </span>
-                                    <span class="text-gray-600 dark:text-slate-300 text-sm font-medium">
-                                        {{ Auth::user()->email_verified_at ? 'Email Verified' : 'Email Not Verified' }}
-                                    </span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-blue-500 text-xl">schedule</span>
-                                    <span class="text-gray-600 dark:text-slate-300 text-sm font-medium">
-                                        Last login: {{ Auth::user()->last_login_at ? Auth::user()->last_login_at->diffForHumans() : 'First time' }}
-                                    </span>
-                                </div>
-                                <div id="smtp-status" class="flex items-center gap-2">
-                                    <span class="animate-pulse w-2 h-2 bg-gray-400 dark:bg-slate-600 rounded-full"></span>
-                                    <span class="text-gray-600 dark:text-slate-300 text-xs font-medium">Checking SMTP...</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="hidden lg:block">
-                            <div class="w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl flex items-center justify-center">
-                                <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-6xl">analytics</span>
-                            </div>
-                        </div>
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h2 class="text-lg font-semibold">Sending setup</h2>
+        <div class="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+            <div class="flex justify-between"><span>SMTP accounts</span><strong>{{ $stats['smtp_accounts'] }}</strong></div>
+            <div class="flex justify-between"><span>Unread messages</span><strong>{{ $stats['unread_messages'] }}</strong></div>
+            <div class="flex justify-between"><span>Theme mode</span><strong>Global toggle enabled</strong></div>
+        </div>
+    </section>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-2">
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h2 class="text-lg font-semibold">Recent campaigns</h2>
+        <div class="mt-4 space-y-3">
+            @forelse($recentCampaigns as $campaign)
+                <div class="flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
+                    <div>
+                        <p class="font-medium">{{ $campaign->name }}</p>
+                        <p class="text-sm text-slate-500">{{ $campaign->subject }}</p>
                     </div>
+                    <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{ $campaign->status }}</span>
                 </div>
+            @empty
+                <p class="text-sm text-slate-500">No campaigns yet.</p>
+            @endforelse
+        </div>
+    </section>
 
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Stat Card 1 -->
-                    <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Total Subscribers</h3>
-                            <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                                <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">group</span>
-                            </div>
-                        </div>
-                        <p id="totalSubscribers" class="text-4xl font-bold text-gray-900 dark:text-white mb-2">{{ number_format($totalSubscribers ?? 0) }}</p>
-                        <p class="text-green-600 dark:text-green-400 text-sm font-medium">{{ ($subscriberGrowth ?? 0) >= 0 ? '+' : '' }}{{ $subscriberGrowth ?? 0 }}% growth</p>
-                    </div>
-                    
-                    <!-- Stat Card 2 -->
-                    <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Total Campaigns</h3>
-                            <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                                <span class="material-symbols-outlined text-purple-600 dark:text-purple-400">campaign</span>
-                            </div>
-                        </div>
-                        <p class="text-4xl font-bold text-gray-900 dark:text-white mb-2">{{ $campaignsTotal ?? 0 }}</p>
-                        <p class="text-green-600 dark:text-green-400 text-sm font-medium">{{ ($campaignGrowth ?? 0) >= 0 ? '+' : '' }}{{ $campaignGrowth ?? 0 }}% growth</p>
-                    </div>
-                    
-                    <!-- Stat Card 3 -->
-                    <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Emails Sent</h3>
-                            <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                                <span class="material-symbols-outlined text-green-600 dark:text-green-400">send</span>
-                            </div>
-                        </div>
-                        <p id="totalEmailsSent" class="text-4xl font-bold text-gray-900 dark:text-white mb-2">{{ number_format($totalEmailsSent ?? 0) }}</p>
-                        <p class="text-green-600 dark:text-green-400 text-sm font-medium">{{ $emailsToday ?? 0 }} today</p>
-                    </div>
-                    
-                    <!-- Stat Card 4 -->
-                    <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Open Rate</h3>
-                            <div class="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
-                                <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400">visibility</span>
-                            </div>
-                        </div>
-                        <p class="text-4xl font-bold text-gray-900 dark:text-white mb-2">{{ $openRate ?? 0 }}%</p>
-                        <p class="text-green-600 dark:text-green-400 text-sm font-medium">{{ ($openGrowth ?? 0) >= 0 ? '+' : '' }}{{ $openGrowth ?? 0 }}% trend</p>
-                    </div>
-                    
-                    <!-- Stat Card 5 -->
-                    <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Click Rate</h3>
-                            <div class="p-2 bg-red-100 dark:bg-red-900/50 rounded-lg">
-                                <span class="material-symbols-outlined text-red-600 dark:text-red-400">click</span>
-                            </div>
-                        </div>
-                        <p class="text-4xl font-bold text-gray-900 dark:text-white mb-2">{{ $clickRate ?? 0 }}%</p>
-                        <p class="text-green-600 dark:text-green-400 text-sm font-medium">{{ number_format($totalClicks ?? 0) }} total</p>
-                    </div>
-                    
-                    <!-- Stat Card 6 -->
-                    <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Engagement</h3>
-                            <div class="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg">
-                                <span class="material-symbols-outlined text-indigo-600 dark:text-indigo-400">trending_up</span>
-                            </div>
-                        </div>
-                        <p class="text-4xl font-bold text-gray-900 dark:text-white mb-2">{{ $engagementRate ?? 0 }}%</p>
-                        <p class="text-green-600 dark:text-green-400 text-sm font-medium">{{ ($engagementGrowth ?? 0) >= 0 ? '+' : '' }}{{ $engagementGrowth ?? 0 }}% growth</p>
-                    </div>
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h2 class="text-lg font-semibold">Recent subscribers</h2>
+        <div class="mt-4 space-y-3">
+            @forelse($recentSubscribers as $subscriber)
+                <div class="rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
+                    <p class="font-medium">{{ $subscriber->email }}</p>
+                    <p class="text-sm text-slate-500">{{ trim(($subscriber->first_name ?? '').' '.($subscriber->last_name ?? '')) ?: 'No name' }}</p>
                 </div>
-
-                <!-- Two Column Layout -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Today's Activity -->
-                    <div class="lg:col-span-1">
-                        <div class="glass-card rounded-2xl p-6 shadow-lg border-2 border-blue-100 dark:border-slate-700">
-                            <h3 class="text-gray-900 dark:text-white font-bold text-lg mb-6">Today's Activity</h3>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                                    <div>
-                                        <p class="text-gray-600 dark:text-slate-300 text-sm font-medium">Emails Sent</p>
-                                        <p id="emailsToday" class="text-gray-900 dark:text-white text-2xl font-bold">{{ $emailsToday ?? 0 }}</p>
-                                    </div>
-                                    <div class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                                        <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">send</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                                    <div>
-                                        <p class="text-gray-600 dark:text-slate-300 text-sm font-medium">Opens</p>
-                                        <p id="opensToday" class="text-gray-900 dark:text-white text-2xl font-bold">{{ $opensToday ?? 0 }}</p>
-                                    </div>
-                                    <div class="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                                        <span class="material-symbols-outlined text-green-600 dark:text-green-400">visibility</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                                    <div>
-                                        <p class="text-gray-600 dark:text-slate-300 text-sm font-medium">Clicks</p>
-                                        <p id="clicksToday" class="text-gray-900 dark:text-white text-2xl font-bold">{{ $clicksToday ?? 0 }}</p>
-                                    </div>
-                                    <div class="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                                        <span class="material-symbols-outlined text-purple-600 dark:text-purple-400">click</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
-                                    <div>
-                                        <p class="text-gray-600 dark:text-slate-300 text-sm font-medium">Active Campaigns</p>
-                                        <p id="activeCampaigns" class="text-gray-900 dark:text-white text-2xl font-bold">{{ $activeCampaigns ?? 0 }}</p>
-                                    </div>
-                                    <div class="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
-                                        <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400">campaign</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Actions -->
-                    <div class="lg:col-span-2">
-                        <div class="glass-card rounded-2xl p-6 shadow-lg">
-                            <h3 class="text-gray-900 dark:text-white font-bold text-lg mb-6">Quick Actions</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <a href="{{ url('/campaigns/create') }}" class="group p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl hover:shadow-lg transition-all duration-300 hover-glow">
-                                    <div class="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl w-fit mb-4">
-                                        <span class="material-symbols-outlined text-white text-2xl">campaign</span>
-                                    </div>
-                                    <h4 class="text-gray-900 dark:text-white font-bold text-base mb-1">Create Campaign</h4>
-                                    <p class="text-gray-600 dark:text-slate-300 text-sm">Start a new email campaign</p>
-                                </a>
-                                <a href="{{ url('/subscribers/import') }}" class="group p-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl hover:shadow-lg transition-all duration-300 hover-glow">
-                                    <div class="p-3 bg-gradient-to-br from-green-600 to-blue-600 rounded-xl w-fit mb-4">
-                                        <span class="material-symbols-outlined text-white text-2xl">upload</span>
-                                    </div>
-                                    <h4 class="text-gray-900 dark:text-white font-bold text-base mb-1">Import Subscribers</h4>
-                                    <p class="text-gray-600 dark:text-slate-300 text-sm">Upload your contact list</p>
-                                </a>
-                                <a href="{{ url('/smtp') }}" class="group p-6 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl hover:shadow-lg transition-all duration-300 hover-glow">
-                                    <div class="p-3 bg-gradient-to-br from-yellow-600 to-orange-600 rounded-xl w-fit mb-4">
-                                        <span class="material-symbols-outlined text-white text-2xl">dns</span>
-                                    </div>
-                                    <h4 class="text-gray-900 dark:text-white font-bold text-base mb-1">SMTP Settings</h4>
-                                    <p class="text-gray-600 dark:text-slate-300 text-sm">Configure email delivery</p>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            @empty
+                <p class="text-sm text-slate-500">No subscribers yet.</p>
+            @endforelse
+        </div>
+    </section>
+</div>
+@endsection
             </div>
         </main>
     </div>

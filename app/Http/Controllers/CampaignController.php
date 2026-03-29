@@ -115,6 +115,9 @@ class CampaignController extends Controller
         ]);
 
         return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign created successfully.');
+        ]);
+
+        return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign created successfully.');
             'total_recipients' => Subscriber::where('user_id', Auth::id())
                 ->where('list_id', $list->id)
                 ->active()

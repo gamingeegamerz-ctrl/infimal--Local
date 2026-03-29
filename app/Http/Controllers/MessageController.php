@@ -85,6 +85,9 @@ class MessageController extends Controller
         ]) + [
             'user_id' => Auth::id(),
             'type' => $request->input('type', 'email'),
+        ]);
+
+        return redirect()->route('messages.index')->with('success', 'Message template saved.');
             'is_template' => true, // MAIN FEATURE KEPT
         ]);
 

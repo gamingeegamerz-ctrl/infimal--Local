@@ -51,6 +51,14 @@ Route::get('/track/unsubscribe', [TrackingController::class, 'unsubscribe'])->na
 
 Route::middleware('auth')->group(function (): void {
     Route::get('/billing', [BillingController::class, 'index'])->name('billing');
+    Route::match(['GET', 'POST'], '/billing/checkout', [PaymentController::class, 'createOrder'])->name('billing.checkout')->middleware('throttle:10,1');
+    Route::post('/billing/webhook/paypal', [PaymentController::class, 'webhook'])->name('billing.webhook.paypal');
+    Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+    Route::get('/payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
+    Route::redirect('/payment', '/billing')->name('payment');
+});
+
+Route::middleware(['auth', 'paid'])->group(function (): void {
     Route::post('/billing/checkout', [PaymentController::class, 'createOrder'])->name('billing.checkout')->middleware('throttle:10,1');
     Route::post('/billing/capture/{orderId}', [PaymentController::class, 'captureOrder'])->name('billing.capture')->middleware('throttle:10,1');
     Route::post('/billing/webhook/paypal', [PaymentController::class, 'webhook'])->name('billing.webhook.paypal');
@@ -134,6 +142,7 @@ Route::middleware(['auth', 'paid.access'])->group(function () {
         Route::get('/reports', [AnalyticsController::class, 'reports'])->name('reports');
         Route::get('/export', [AnalyticsController::class, 'export'])->name('export');
     });
+});
     
     // EXTRA PAGES
     Route::get('/templates', function () {
