@@ -29,6 +29,12 @@ class AuthController extends Controller
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            return back()->withErrors(['email' => 'Invalid credentials provided.'])->onlyInput('email');
+        }
+
+        $request->session()->regenerate();
+
+        return redirect()->route($request->user()->hasPaid() && $request->user()->hasActiveLicense() ? 'dashboard' : 'billing');
             return back()
                 ->withErrors(['email' => 'Invalid credentials provided.'])
                 ->onlyInput('email');
@@ -76,6 +82,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
+        return redirect()->route('billing')->with('success', 'Account created. Complete your $299 payment to unlock the platform.');
         return redirect()
             ->route('payment')
             ->with('success', 'Account created. Complete payment to continue.');
@@ -108,6 +115,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        return redirect()->route('login');
         return redirect()
             ->route('login')
             ->with('success', 'Logged out successfully!');

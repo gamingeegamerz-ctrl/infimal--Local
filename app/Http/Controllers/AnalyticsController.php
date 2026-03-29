@@ -38,6 +38,7 @@ class AnalyticsController extends Controller
     private function buildPayload(): array
     {
         $userId = Auth::id();
+        $base = EmailLog::where('user_id', $userId);
 
         $base = EmailLog::where('user_id', $userId);
 
@@ -82,6 +83,8 @@ class AnalyticsController extends Controller
                 'click_rate' => $sent > 0 ? round(($clicks / $sent) * 100, 2) : 0,
                 'bounce_rate' => $sent > 0 ? round(($bounces / $sent) * 100, 2) : 0,
             ],
+            'recent_activity' => (clone $base)->latest()->limit(25)->get(),
+            'campaigns' => Campaign::where('user_id', $userId)->latest()->limit(20)->get(),
 
             'recent_activity' => (clone $base)->latest()->limit(25)->get(),
 

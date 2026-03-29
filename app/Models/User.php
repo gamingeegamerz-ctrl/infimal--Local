@@ -71,6 +71,9 @@ class User extends Authenticatable
         return $this->subscriberLists();
     }
 
+    public function subscriberLists(): HasMany
+    {
+        return $this->lists();
     public function mailingLists(): HasMany
     {
         return $this->subscriberLists();
@@ -112,6 +115,21 @@ class User extends Authenticatable
 
     public function hasActiveLicense(): bool
     {
+        if (! empty($this->license_key)) {
+            return $this->licenses()
+                ->where('license_key', $this->license_key)
+                ->where('status', 'active')
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                })
+                ->exists();
+        }
+
+        return $this->activeLicense()
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->exists();
         return $this->activeLicense()->exists() || (! empty($this->license_key) && ($this->license_status === 'active' || $this->license_status === null));
         return $this->activeLicense()->exists()
             || ((string) $this->license_status === 'active' && !empty($this->license_key));
