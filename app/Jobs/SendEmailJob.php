@@ -52,6 +52,8 @@ class SendCampaignEmailJob implements ShouldQueue
         }
 
         $messageId = $existingLog?->message_id ?: (string) Str::uuid();
+        $messageId = 'infimal-job-' . $emailJob->id;
+        $messageId = 'job-' . $emailJob->id;
 
         $emailLog = EmailLog::updateOrCreate(
             ['message_id' => $messageId],
