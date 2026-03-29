@@ -7,6 +7,7 @@
             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">InfiMal Pro</p>
             <h1 class="mt-2 text-4xl font-bold">$299 one-time payment</h1>
             <p class="mt-3 max-w-2xl text-slate-600 dark:text-slate-300">Lifetime access is activated only after a verified PayPal capture and active license issuance.</p>
+            <p class="mt-3 max-w-2xl text-slate-600 dark:text-slate-300">No subscription, no trial, lifetime access after verified payment and license issuance.</p>
             <ul class="mt-6 space-y-2 text-sm text-slate-600 dark:text-slate-300">@foreach($features as $feature)<li>• {{ $feature }}</li>@endforeach</ul>
         </div>
         <div class="w-full max-w-md rounded-2xl bg-slate-50 p-6 dark:bg-slate-800">
@@ -22,6 +23,10 @@
                 @else
                     <div class="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">Configure <code>PAYPAL_CLIENT_ID</code>, <code>PAYPAL_SECRET</code>, and <code>PAYPAL_WEBHOOK_ID</code> to enable checkout.</div>
                 @endif
+                <form method="POST" action="{{ route('billing.checkout') }}" class="mt-6">@csrf<button class="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white">Pay $299</button></form>
+                <p class="mt-3 text-xs text-slate-500">You will be redirected to PayPal for approval, then InfiMal verifies the approved order server-side before activating your account.</p>
+                <button id="pay-btn" class="mt-6 w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white">Pay $299</button>
+                <p class="mt-3 text-xs text-slate-500">Payment is verified on the backend with PayPal before any access is granted.</p>
             @else
                 <a href="{{ route('dashboard') }}" class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white">Open dashboard</a>
             @endif
@@ -68,5 +73,13 @@
             }
         }).render('#paypal-button-container');
     </script>
+@if(!$user->hasPaid())
+<script>
+document.getElementById('pay-btn')?.addEventListener('click', async () => {
+    const create = await fetch('{{ route('billing.checkout') }}', {method:'POST', headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content,'Accept':'application/json'}});
+    const order = await create.json();
+    if (order.approval_url) window.location.href = order.approval_url;
+});
+</script>
 @endif
 @endsection

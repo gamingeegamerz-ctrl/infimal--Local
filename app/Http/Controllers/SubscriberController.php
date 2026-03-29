@@ -94,6 +94,45 @@ class SubscriberController extends Controller
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => 'Subscriber added successfully.']);
+        
+        try {
+            // Verify list belongs to user
+            $list = MailingList::where('id', $request->list_id)
+                ->where('user_id', Auth::id())
+                ->first();
+                
+            if (!$list) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'List not found or you don\'t have permission'
+                ], 404);
+            }
+            
+            $subscriber = Subscriber::create([
+                'user_id' => Auth::id(),
+                'list_id' => $request->list_id,
+                'email' => $request->email,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'status' => $request->status,
+                'source' => 'manual',
+                'subscribed_at' => now()
+            ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Subscriber added to ' . $list->name . ' successfully!'
+                ]);
+            }
+
+            return redirect()->route('subscribers.index')->with('success', 'Subscriber added to ' . $list->name . ' successfully!');
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
         }
 
         return redirect()->route('subscribers.index')->with('success', 'Subscriber added successfully.');
@@ -107,6 +146,28 @@ class SubscriberController extends Controller
         return request()->expectsJson()
             ? response()->json(['success' => true, 'message' => 'Subscriber deleted.'])
             : redirect()->route('subscribers.index')->with('success', 'Subscriber deleted.');
+        try {
+            $subscriber = Subscriber::where('user_id', Auth::id())
+                ->where('id', $id)
+                ->firstOrFail();
+            
+            $subscriber->delete();
+            
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Subscriber deleted!'
+                ]);
+            }
+
+            return redirect()->route('subscribers.index')->with('success', 'Subscriber deleted successfully.');
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete subscriber'
+            ], 500);
+        }
     }
 
     public function edit($id): JsonResponse
@@ -146,6 +207,46 @@ class SubscriberController extends Controller
         $query = Subscriber::where('user_id', Auth::id())->with('mailingList');
         if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
+        
+        try {
+            $subscriber = Subscriber::where('user_id', Auth::id())
+                ->where('id', $id)
+                ->firstOrFail();
+            
+            // Verify list belongs to user
+            $list = MailingList::where('id', $request->list_id)
+                ->where('user_id', Auth::id())
+                ->first();
+                
+            if (!$list) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'List not found or you don\'t have permission'
+                ], 404);
+            }
+            
+            $subscriber->update([
+                'email' => $request->email,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'status' => $request->status,
+                'list_id' => $request->list_id
+            ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Subscriber updated!'
+                ]);
+            }
+
+            return redirect()->route('subscribers.index')->with('success', 'Subscriber updated successfully.');
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
         }
         if ($request->filled('list_id') && $request->list_id !== 'all') {
             $query->where('list_id', $request->integer('list_id'));
@@ -236,6 +337,72 @@ class SubscriberController extends Controller
                 'is_public' => false,
                 'is_default' => $listData['is_default'],
             ]);
+        try {
+            $request->validate([
+                'file' => 'required|file|mimes:csv,txt',
+                'list_id' => 'required|exists:mailing_lists,id'
+            ]);
+            
+            $list = MailingList::where('id', $request->list_id)
+                ->where('user_id', Auth::id())
+                ->firstOrFail();
+            
+            $file = $request->file('file');
+            $path = $file->getRealPath();
+            $data = array_map('str_getcsv', file($path));
+            
+            // Remove header if exists
+            array_shift($data);
+            
+            $imported = 0;
+            $skipped = 0;
+            
+            foreach ($data as $row) {
+                if (count($row) >= 1) {
+                    $email = trim($row[0]);
+                    $firstName = isset($row[1]) ? trim($row[1]) : null;
+                    $lastName = isset($row[2]) ? trim($row[2]) : null;
+                    
+                    // Check if email already exists for this user
+                    $exists = Subscriber::where('user_id', Auth::id())
+                        ->where('email', $email)
+                        ->exists();
+                    
+                    if (!$exists && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        Subscriber::create([
+                            'user_id' => Auth::id(),
+                            'list_id' => $request->list_id,
+                            'email' => $email,
+                            'first_name' => $firstName,
+                            'last_name' => $lastName,
+                            'status' => 'active',
+                            'source' => 'csv_import',
+                            'subscribed_at' => now()
+                        ]);
+                        $imported++;
+                    } else {
+                        $skipped++;
+                    }
+                }
+            }
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Imported {$imported} subscribers successfully. {$skipped} skipped.",
+                    'imported' => $imported,
+                    'skipped' => $skipped,
+                    'errors' => 0
+                ]);
+            }
+
+            return redirect()->route('subscribers.index')->with('success', "Imported {$imported} subscribers successfully. {$skipped} skipped.");
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
