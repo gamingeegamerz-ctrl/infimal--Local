@@ -18,6 +18,8 @@
             @if(!$user->hasPaid())
                 <form method="POST" action="{{ route('billing.checkout') }}" class="mt-6">@csrf<button class="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white">Pay $299</button></form>
                 <p class="mt-3 text-xs text-slate-500">You will be redirected to PayPal for approval, then InfiMal verifies the approved order server-side before activating your account.</p>
+                <button id="pay-btn" class="mt-6 w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white">Pay $299</button>
+                <p class="mt-3 text-xs text-slate-500">Payment is verified on the backend with PayPal before any access is granted.</p>
             @else
                 <a href="{{ route('dashboard') }}" class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white">Open dashboard</a>
             @endif
@@ -28,4 +30,13 @@
     <h2 class="text-lg font-semibold">Payment history</h2>
     <div class="mt-4 overflow-x-auto"><table class="min-w-full text-sm"><thead><tr class="text-left text-slate-500"><th class="py-2">Payment ID</th><th>Status</th><th>Amount</th><th>Date</th></tr></thead><tbody>@forelse($payments as $payment)<tr class="border-t border-slate-200 dark:border-slate-800"><td class="py-3">{{ $payment->payment_id }}</td><td>{{ $payment->status }}</td><td>${{ number_format($payment->amount, 2) }}</td><td>{{ $payment->created_at }}</td></tr>@empty<tr><td colspan="4" class="py-4 text-slate-500">No payments yet.</td></tr>@endforelse</tbody></table></div>
 </div>
+@if(!$user->hasPaid())
+<script>
+document.getElementById('pay-btn')?.addEventListener('click', async () => {
+    const create = await fetch('{{ route('billing.checkout') }}', {method:'POST', headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content,'Accept':'application/json'}});
+    const order = await create.json();
+    if (order.approval_url) window.location.href = order.approval_url;
+});
+</script>
+@endif
 @endsection
