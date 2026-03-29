@@ -1,11 +1,9 @@
-<?php
+k<?php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
 
 class License extends Model
 {
@@ -15,34 +13,29 @@ class License extends Model
         'license_key',
         'user_id',
         'plan_type',
-        'price',
         'duration_days',
-        'status',
-        'is_active',
-        'is_lifetime',
         'expires_at',
-        'features',
-        'notes',
+        'is_active',
+        'notes'
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
-        'is_active' => 'boolean',
-        'is_lifetime' => 'boolean',
-        'features' => 'array',
+        'is_active' => 'boolean'
     ];
 
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public static function generateLicenseKey(): string
+    // Generate a unique license key
+    public static function generateLicenseKey()
     {
         do {
-            $key = 'INFIMAL-' . strtoupper(Str::random(24));
+            $key = strtoupper(bin2hex(random_bytes(16)));
         } while (self::where('license_key', $key)->exists());
-
+        
         return $key;
     }
 }

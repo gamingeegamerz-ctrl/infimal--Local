@@ -155,14 +155,10 @@ class SubscriberController extends Controller
                 'subscribed_at' => now()
             ]);
             
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Subscriber added to ' . $list->name . ' successfully!'
-                ]);
-            }
-
-            return redirect()->route('subscribers.index')->with('success', 'Subscriber added to ' . $list->name . ' successfully!');
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscriber added to ' . $list->name . ' successfully!'
+            ]);
             
         } catch (\Exception $e) {
             return response()->json([
@@ -181,14 +177,10 @@ class SubscriberController extends Controller
             
             $subscriber->delete();
             
-            if (request()->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Subscriber deleted!'
-                ]);
-            }
-
-            return redirect()->route('subscribers.index')->with('success', 'Subscriber deleted successfully.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscriber deleted!'
+            ]);
             
         } catch (\Exception $e) {
             return response()->json([
@@ -261,14 +253,10 @@ class SubscriberController extends Controller
                 'list_id' => $request->list_id
             ]);
             
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Subscriber updated!'
-                ]);
-            }
-
-            return redirect()->route('subscribers.index')->with('success', 'Subscriber updated successfully.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscriber updated!'
+            ]);
             
         } catch (\Exception $e) {
             return response()->json([
@@ -380,17 +368,13 @@ class SubscriberController extends Controller
                 }
             }
             
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => "Imported {$imported} subscribers successfully. {$skipped} skipped.",
-                    'imported' => $imported,
-                    'skipped' => $skipped,
-                    'errors' => 0
-                ]);
-            }
-
-            return redirect()->route('subscribers.index')->with('success', "Imported {$imported} subscribers successfully. {$skipped} skipped.");
+            return response()->json([
+                'success' => true,
+                'message' => "Imported {$imported} subscribers successfully. {$skipped} skipped.",
+                'imported' => $imported,
+                'skipped' => $skipped,
+                'errors' => 0
+            ]);
             
         } catch (\Exception $e) {
             return response()->json([

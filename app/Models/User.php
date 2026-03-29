@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,30 +9,18 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use HasFactory;
     use Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'avatar',
-        'timezone',
-        'phone',
-        'bio',
-        'preferences',
+        'google_id',
         'payment_status',
         'is_paid',
-        'plan_name',
         'paid_at',
-        'payment_date',
-        'payment_amount',
-        'transaction_id',
         'license_key',
         'license_status',
-        'license_expires_at',
-        'is_admin',
-        'google_id',
         'otp_code',
         'otp_expires_at',
         'otp_verified_at',
@@ -47,16 +34,12 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'preferences' => 'array',
         'paid_at' => 'datetime',
         'payment_date' => 'datetime',
         'plan_expiry_date' => 'datetime',
-        'license_expires_at' => 'datetime',
         'otp_expires_at' => 'datetime',
         'otp_verified_at' => 'datetime',
         'is_paid' => 'boolean',
-        'is_admin' => 'boolean',
-        'password' => 'hashed',
     ];
 
     public function campaigns(): HasMany
@@ -84,26 +67,14 @@ class User extends Authenticatable
         return $this->hasMany(Subscriber::class, 'user_id');
     }
 
-    public function smtpAccounts(): HasMany
-    {
-        return $this->hasMany(SMTPAccount::class, 'user_id');
-    }
-
-    public function payments(): HasMany
-    {
-        return $this->hasMany(Payment::class, 'user_id');
-    }
-
     public function licenses(): HasMany
     {
-        return $this->hasMany(License::class, 'user_id');
+        return $this->hasMany(License::class);
     }
 
     public function activeLicense(): HasOne
     {
-        return $this->hasOne(License::class, 'user_id')->where(function($query) {
-            $query->where('status', 'active')->orWhere('is_active', true);
-        });
+        return $this->hasOne(License::class)->where('is_active', true);
     }
 
     public function hasPaid(): bool

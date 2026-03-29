@@ -152,6 +152,7 @@
                 opacity: 1;
             }
         }
+        /* Dark mode toggle button */
         .theme-toggle {
             position: relative;
             width: 60px;
@@ -210,6 +211,7 @@
             content: '🌙';
             color: #fbbf24;
         }
+        /* Modal styles */
         .modal-backdrop {
             position: fixed;
             top: 0;
@@ -226,6 +228,7 @@
         .modal-hidden {
             display: none;
         }
+        /* Progress bar */
         .progress-bar {
             width: 100%;
             height: 8px;
@@ -242,6 +245,46 @@
             transition: width 0.3s ease;
             border-radius: 4px;
         }
+        /* Custom dark mode classes */
+        .text-gray-500.dark-text {
+            color: #94a3b8;
+        }
+        .text-gray-600.dark-text {
+            color: #cbd5e1;
+        }
+        .text-gray-700.dark-text {
+            color: #e2e8f0;
+        }
+        .text-gray-900.dark-text {
+            color: #f1f5f9;
+        }
+        .bg-white.dark-bg {
+            background-color: #1e293b;
+        }
+        .bg-gray-50.dark-bg {
+            background-color: #0f172a;
+        }
+        .bg-blue-50.dark-bg {
+            background-color: rgba(30, 64, 175, 0.2);
+        }
+        .bg-green-50.dark-bg {
+            background-color: rgba(6, 95, 70, 0.2);
+        }
+        .bg-red-50.dark-bg {
+            background-color: rgba(153, 27, 27, 0.2);
+        }
+        .bg-orange-50.dark-bg {
+            background-color: rgba(194, 65, 12, 0.2);
+        }
+        .bg-gray-100.dark-bg {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+        .border-gray-200.dark-border {
+            border-color: #334155;
+        }
+        .border-gray-300.dark-border {
+            border-color: #475569;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 transition-colors duration-300">
@@ -249,6 +292,7 @@
         <!-- Sidebar -->
         <aside class="w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 flex-shrink-0">
             <div class="flex flex-col h-full p-4">
+                <!-- Logo -->
                 <div class="sidebar-logo flex items-center gap-3 p-3 mb-8">
                     <div class="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                         <span class="material-symbols-outlined">all_inbox</span>
@@ -259,6 +303,7 @@
                     </div>
                 </div>
                 
+                <!-- Navigation -->
                 <nav class="flex flex-col gap-1 flex-1">
                     <a class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white font-medium text-sm" href="{{ url('/dashboard') }}">
                         <span class="material-symbols-outlined text-xl">dashboard</span>
@@ -294,6 +339,7 @@
                     </a>
                 </nav>
                 
+                <!-- Dark Mode Toggle -->
                 <div class="pt-4 border-t border-gray-200 dark:border-slate-700 logout-btn flex items-center justify-between">
                     <div class="flex items-center gap-3 px-3 py-2.5">
                         <span class="material-symbols-outlined text-xl text-gray-600 dark:text-slate-400">dark_mode</span>
@@ -302,6 +348,7 @@
                     <div class="theme-toggle" id="themeToggle"></div>
                 </div>
                 
+                <!-- Logout -->
                 <div class="pt-4 border-t border-gray-200 dark:border-slate-700 logout-btn">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -316,6 +363,7 @@
 
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-slate-900">
+            <!-- Top Bar -->
             <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-10">
                 <div class="px-6 py-4">
                     <div class="flex items-center justify-between">
@@ -360,7 +408,7 @@
                                 <div class="flex items-center gap-2">
                                     <span class="material-symbols-outlined text-blue-500 text-xl">trending_up</span>
                                     <span class="text-gray-600 dark:text-slate-300 text-sm font-medium">
-                                        30 Day Growth: +{{ $growth30Days ?? 0 }}
+                                        30 Day Growth: +{{ $growth30Days }}
                                     </span>
                                 </div>
                             </div>
@@ -375,6 +423,7 @@
 
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Stat Card 1 -->
                     <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Total Subscribers</h3>
@@ -383,9 +432,10 @@
                             </div>
                         </div>
                         <p class="text-4xl font-bold text-gray-900 dark:text-white mb-2">{{ $totalSubscribers }}</p>
-                        <p class="text-green-600 dark:text-green-400 text-sm font-medium">+{{ $growth30Days ?? 0 }} this month</p>
+                        <p class="text-green-600 dark:text-green-400 text-sm font-medium">+{{ $growth30Days }} this month</p>
                     </div>
                     
+                    <!-- Stat Card 2 -->
                     <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Active Subscribers</h3>
@@ -397,6 +447,7 @@
                         <p class="text-green-600 dark:text-green-400 text-sm font-medium">{{ $totalSubscribers > 0 ? number_format($activeSubscribers/$totalSubscribers*100, 1) : 0 }}% of total</p>
                     </div>
                     
+                    <!-- Stat Card 3 -->
                     <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Unsubscribed</h3>
@@ -408,6 +459,7 @@
                         <p class="text-green-600 dark:text-green-400 text-sm font-medium">{{ $totalSubscribers > 0 ? number_format($unsubscribedSubscribers/$totalSubscribers*100, 1) : 0 }}% of total</p>
                     </div>
                     
+                    <!-- Stat Card 4 -->
                     <div class="glass-card rounded-2xl p-6 shadow-lg hover-glow transition-all duration-300">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-gray-600 dark:text-slate-300 font-semibold text-sm">Bounced</h3>
@@ -420,24 +472,6 @@
                     </div>
                 </div>
 
-                <!-- Filters -->
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <div class="flex gap-3">
-                        <select id="statusFilter" onchange="filterByStatus(this.value)" class="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-700 dark:text-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Status</option>
-                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                            <option value="unsubscribed" {{ request('status') == 'unsubscribed' ? 'selected' : '' }}>Unsubscribed</option>
-                            <option value="bounced" {{ request('status') == 'bounced' ? 'selected' : '' }}>Bounced</option>
-                        </select>
-                        <select id="listFilter" onchange="filterByList(this.value)" class="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-700 dark:text-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="all" {{ request('list_id') == 'all' ? 'selected' : '' }}>All Lists</option>
-                            @foreach($lists as $list)
-                                <option value="{{ $list->id }}" {{ request('list_id') == $list->id ? 'selected' : '' }}>{{ $list->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
                 <!-- Main Content Area -->
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <!-- Subscribers Table -->
@@ -445,8 +479,25 @@
                         <div class="glass-card rounded-2xl p-6 shadow-lg">
                             <div class="flex items-center justify-between mb-6">
                                 <h3 class="text-gray-900 dark:text-white font-bold text-lg">All Subscribers</h3>
+                                <div class="flex items-center gap-3">
+                                    <select id="statusFilter" onchange="filterByStatus(this.value)" class="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-700 dark:text-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Status</option>
+                                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                                        <option value="unsubscribed" {{ request('status') == 'unsubscribed' ? 'selected' : '' }}>Unsubscribed</option>
+                                        <option value="bounced" {{ request('status') == 'bounced' ? 'selected' : '' }}>Bounced</option>
+                                    </select>
+                                    <select id="listFilter" onchange="filterByList(this.value)" class="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-700 dark:text-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="all" {{ request('list_id') == 'all' ? 'selected' : '' }}>All Lists</option>
+                                        @foreach($lists as $list)
+                                            <option value="{{ $list->id }}" {{ request('list_id') == $list->id ? 'selected' : '' }}>
+                                                {{ $list->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
                             
+                            <!-- Subscribers Table -->
                             <div class="overflow-x-auto">
                                 <table class="w-full min-w-full">
                                     <thead>
@@ -512,6 +563,7 @@
                                 </table>
                             </div>
                             
+                            <!-- Pagination -->
                             @if($subscribers->hasPages())
                             <div class="flex items-center justify-between pt-6 mt-6 border-t border-gray-200 dark:border-slate-700">
                                 <div class="text-gray-600 dark:text-slate-400 text-sm">
@@ -527,29 +579,27 @@
 
                     <!-- Right Side Panel -->
                     <div class="lg:col-span-1 flex flex-col gap-6">
-                        <!-- Add Subscriber Form -->
+                        <!-- Quick Actions -->
                         <div class="glass-card rounded-2xl p-6 shadow-lg">
-                            <h2 class="font-semibold text-lg" id="formTitle">Add subscriber</h2>
-                            <form id="subscriberForm" method="POST" class="mt-4 space-y-3">
-                                @csrf
-                                <input type="hidden" name="_method" id="methodField" value="POST">
-                                <input type="hidden" name="edit_id" id="edit_id" value="">
-                                <input class="w-full rounded-xl border border-slate-300 px-4 py-3 dark:border-slate-700 dark:bg-slate-950" name="email" placeholder="Email" required>
-                                <input class="w-full rounded-xl border border-slate-300 px-4 py-3 dark:border-slate-700 dark:bg-slate-950" name="first_name" placeholder="First name">
-                                <input class="w-full rounded-xl border border-slate-300 px-4 py-3 dark:border-slate-700 dark:bg-slate-950" name="last_name" placeholder="Last name">
-                                <select class="w-full rounded-xl border border-slate-300 px-4 py-3 dark:border-slate-700 dark:bg-slate-950" name="list_id" required>
-                                    <option value="">-- Select List --</option>
-                                    @foreach($lists as $list)
-                                    <option value="{{ $list->id }}">{{ $list->name }}</option>
-                                    @endforeach
-                                </select>
-                                <select class="w-full rounded-xl border border-slate-300 px-4 py-3 dark:border-slate-700 dark:bg-slate-950" name="status">
-                                    <option value="active">Active</option>
-                                    <option value="unsubscribed">Unsubscribed</option>
-                                    <option value="bounced">Bounced</option>
-                                </select>
-                                <button type="submit" id="submitBtn" class="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white">Save subscriber</button>
-                            </form>
+                            <h3 class="text-gray-900 dark:text-white font-bold text-lg mb-4">Quick Actions</h3>
+                            <div class="space-y-3">
+                                <button onclick="openAddModal()" class="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors">
+                                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">add</span>
+                                    <span class="text-gray-900 dark:text-white text-sm font-medium">Add New Subscriber</span>
+                                </button>
+                                <button onclick="openImportModal()" class="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
+                                    <span class="material-symbols-outlined text-green-600 dark:text-green-400">upload</span>
+                                    <span class="text-gray-900 dark:text-white text-sm font-medium">Import CSV</span>
+                                </button>
+                                <a href="{{ route('subscribers.export') }}" class="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
+                                    <span class="material-symbols-outlined text-purple-600 dark:text-purple-400">download</span>
+                                    <span class="text-gray-900 dark:text-white text-sm font-medium">Export Subscribers</span>
+                                </a>
+                                <a href="{{ url('/lists') }}" class="w-full flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
+                                    <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400">list_alt</span>
+                                    <span class="text-gray-900 dark:text-white text-sm font-medium">Manage Lists</span>
+                                </a>
+                            </div>
                         </div>
 
                         <!-- Subscriber Stats -->
@@ -558,16 +608,37 @@
                             <div class="space-y-4">
                                 <div>
                                     <p class="text-gray-600 dark:text-slate-400 text-sm">Avg. Open Rate</p>
-                                    <p class="text-gray-900 dark:text-white text-xl font-bold">{{ $avgOpenRate ?? 0 }}%</p>
+                                    <p class="text-gray-900 dark:text-white text-xl font-bold">{{ $avgOpenRate }}%</p>
                                 </div>
                                 <div>
                                     <p class="text-gray-600 dark:text-slate-400 text-sm">Avg. Click Rate</p>
-                                    <p class="text-gray-900 dark:text-white text-xl font-bold">{{ $avgClickRate ?? 0 }}%</p>
+                                    <p class="text-gray-900 dark:text-white text-xl font-bold">{{ $avgClickRate }}%</p>
                                 </div>
                                 <div>
                                     <p class="text-gray-600 dark:text-slate-400 text-sm">Avg. Engagement</p>
-                                    <p class="text-gray-900 dark:text-white text-xl font-bold">{{ number_format((($avgOpenRate ?? 0) + ($avgClickRate ?? 0)) / 2, 1) }}%</p>
+                                    <p class="text-gray-900 dark:text-white text-xl font-bold">{{ number_format(($avgOpenRate + $avgClickRate) / 2, 1) }}%</p>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="glass-card rounded-2xl p-6 shadow-lg">
+                            <h3 class="text-gray-900 dark:text-white font-bold text-lg mb-4">Recent Activity</h3>
+                            <div class="space-y-3 max-h-60 overflow-y-auto">
+                                @forelse($recentActivities as $activity)
+                                <div class="flex items-start gap-3 p-2 rounded-lg bg-gray-50 dark:bg-slate-800/50">
+                                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-sm mt-0.5">person_add</span>
+                                    <div class="flex-1">
+                                        <p class="text-gray-900 dark:text-white text-sm">{{ $activity['message'] }}</p>
+                                        <p class="text-gray-500 dark:text-slate-500 text-xs">{{ $activity['time'] }}</p>
+                                    </div>
+                                </div>
+                                @empty
+                                <div class="text-center py-4">
+                                    <span class="material-symbols-outlined text-gray-400 dark:text-slate-600 text-3xl">history</span>
+                                    <p class="text-gray-600 dark:text-slate-400 mt-2">No recent activity</p>
+                                </div>
+                                @endforelse
                             </div>
                         </div>
                     </div>
@@ -585,25 +656,26 @@
             </div>
             <form id="addSubscriberForm">
                 @csrf
-                <input type="hidden" name="edit_id" id="edit_id_val" value="">
+                <input type="hidden" name="edit_id" id="edit_id" value="">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-gray-700 dark:text-slate-300 text-sm font-medium mb-2">Email Address *</label>
                         <input type="email" name="email" required class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="user@example.com">
+                        <span class="text-red-500 text-xs hidden mt-1" id="emailError"></span>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-gray-700 dark:text-slate-300 text-sm font-medium mb-2">First Name</label>
-                            <input type="text" name="first_name" class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800" placeholder="John">
+                            <input type="text" name="first_name" class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="John">
                         </div>
                         <div>
                             <label class="block text-gray-700 dark:text-slate-300 text-sm font-medium mb-2">Last Name</label>
-                            <input type="text" name="last_name" class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800" placeholder="Doe">
+                            <input type="text" name="last_name" class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Doe">
                         </div>
                     </div>
                     <div>
                         <label class="block text-gray-700 dark:text-slate-300 text-sm font-medium mb-2">Status</label>
-                        <select name="status" class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800">
+                        <select name="status" class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="active">Active</option>
                             <option value="unsubscribed">Unsubscribed</option>
                             <option value="bounced">Bounced</option>
@@ -611,16 +683,17 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 dark:text-slate-300 text-sm font-medium mb-2">List *</label>
-                        <select name="list_id" required class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800">
+                        <select name="list_id" required class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">-- Select List --</option>
                             @foreach($lists as $list)
                                 <option value="{{ $list->id }}">{{ $list->name }}</option>
                             @endforeach
                         </select>
+                        <span class="text-red-500 text-xs hidden mt-1" id="listError"></span>
                     </div>
                 </div>
                 <div class="flex gap-3 mt-8">
-                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold transition-colors" id="modalAddBtn">Add Subscriber</button>
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-semibold transition-colors" id="addBtn">Add Subscriber</button>
                     <button type="button" onclick="closeAddModal()" class="flex-1 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 py-2.5 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
                 </div>
             </form>
@@ -639,12 +712,12 @@
                 <div class="space-y-5">
                     <div>
                         <label class="block text-gray-700 dark:text-slate-300 text-sm font-medium mb-2">Select CSV File</label>
-                        <input type="file" name="file" accept=".csv" required class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800">
+                        <input type="file" name="file" accept=".csv" required class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" id="csvFile">
                         <p class="text-gray-500 dark:text-slate-500 text-xs mt-2">Format: email,first_name,last_name</p>
                     </div>
                     <div>
                         <label class="block text-gray-700 dark:text-slate-300 text-sm font-medium mb-2">List *</label>
-                        <select name="list_id" required class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800">
+                        <select name="list_id" required class="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">-- Select List --</option>
                             @foreach($lists as $list)
                                 <option value="{{ $list->id }}">{{ $list->name }}</option>
@@ -652,9 +725,10 @@
                         </select>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input type="checkbox" name="skip_duplicates" checked class="rounded border-gray-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-800">
+                        <input type="checkbox" name="skip_duplicates" checked class="rounded border-gray-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-800" id="skipDuplicates">
                         <label class="text-gray-700 dark:text-slate-300 text-sm">Skip duplicate emails</label>
                     </div>
+                    
                     <div id="progressSection" class="hidden">
                         <div class="mb-4">
                             <div class="flex justify-between mb-2">
@@ -676,14 +750,19 @@
     </div>
 
     <script>
+    // Theme Toggle
     function initThemeToggle() {
         const themeToggle = document.getElementById('themeToggle');
-        if(!themeToggle) return;
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const savedTheme = localStorage.getItem('infimal_theme');
+        
+        // Set initial theme
         if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
             document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
         }
+        
         themeToggle.addEventListener('click', () => {
             if (document.documentElement.classList.contains('dark')) {
                 document.documentElement.classList.remove('dark');
@@ -695,16 +774,20 @@
         });
     }
 
+    // Modal Functions
     function openAddModal() {
         document.getElementById('modalTitle').textContent = 'Add New Subscriber';
-        document.getElementById('modalAddBtn').textContent = 'Add Subscriber';
+        document.getElementById('addBtn').textContent = 'Add Subscriber';
         document.getElementById('addSubscriberForm').reset();
-        document.getElementById('edit_id_val').value = '';
+        document.getElementById('edit_id').value = '';
         document.getElementById('addModal').classList.remove('modal-hidden');
     }
     
     function closeAddModal() {
         document.getElementById('addModal').classList.add('modal-hidden');
+        document.getElementById('addSubscriberForm').reset();
+        document.getElementById('emailError').classList.add('hidden');
+        document.getElementById('listError').classList.add('hidden');
     }
     
     function openImportModal() {
@@ -717,27 +800,66 @@
         document.getElementById('progressSection').classList.add('hidden');
     }
     
+    // Add/Edit Subscriber Form
     document.getElementById('addSubscriberForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        
         const formData = new FormData(this);
-        const editId = document.getElementById('edit_id_val').value;
+        const submitBtn = document.getElementById('addBtn');
+        const editId = document.getElementById('edit_id').value;
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+        
+        // Clear previous errors
+        document.getElementById('emailError').classList.add('hidden');
+        document.getElementById('listError').classList.add('hidden');
+        
         const url = editId ? `/subscribers/${editId}` : '{{ route("subscribers.store") }}';
         const method = editId ? 'PUT' : 'POST';
         
         fetch(url, {
             method: method,
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
             body: formData
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) window.location.reload();
-            else alert(data.message || 'Error saving subscriber');
+            if (data.success) {
+                alert('✅ ' + data.message);
+                window.location.reload();
+            } else {
+                if (data.errors) {
+                    if (data.errors.email) {
+                        document.getElementById('emailError').textContent = data.errors.email[0];
+                        document.getElementById('emailError').classList.remove('hidden');
+                    }
+                    if (data.errors.list_id) {
+                        document.getElementById('listError').textContent = data.errors.list_id[0];
+                        document.getElementById('listError').classList.remove('hidden');
+                    }
+                } else {
+                    alert('❌ Error: ' + (data.message || 'Failed to save subscriber'));
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Failed to save subscriber');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = editId ? 'Update Subscriber' : 'Add Subscriber';
         });
     });
     
+    // Import Form
     document.getElementById('importForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        
         const formData = new FormData(this);
         const importBtn = document.getElementById('importBtn');
         const progressSection = document.getElementById('progressSection');
@@ -746,33 +868,41 @@
         importBtn.textContent = 'Importing...';
         progressSection.classList.remove('hidden');
         
+        // Simulate progress
         let progress = 0;
-        const interval = setInterval(() => {
-            progress += 10;
+        const progressInterval = setInterval(() => {
+            progress += 5;
             if (progress > 90) progress = 90;
-            document.getElementById('progressFill').style.width = progress + '%';
             document.getElementById('progressPercent').textContent = progress + '%';
+            document.getElementById('progressFill').style.width = progress + '%';
         }, 200);
         
         fetch('{{ route("subscribers.import") }}', {
             method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
             body: formData
         })
         .then(response => response.json())
         .then(data => {
-            clearInterval(interval);
-            document.getElementById('progressFill').style.width = '100%';
+            clearInterval(progressInterval);
             document.getElementById('progressPercent').textContent = '100%';
+            document.getElementById('progressFill').style.width = '100%';
+            
             if (data.success) {
-                alert(`✅ Imported: ${data.imported}, Skipped: ${data.skipped}`);
-                window.location.reload();
+                setTimeout(() => {
+                    alert(`✅ Import Complete!\n\nAdded: ${data.imported || 0}\nSkipped: ${data.skipped || 0}`);
+                    window.location.reload();
+                }, 500);
             } else {
                 alert('❌ ' + data.message);
             }
         })
-        .catch(() => {
-            clearInterval(interval);
+        .catch(error => {
+            clearInterval(progressInterval);
+            console.error('Error:', error);
             alert('❌ Import failed');
         })
         .finally(() => {
@@ -781,74 +911,121 @@
         });
     });
     
+    // Delete Subscriber
+    function deleteSubscriber(id) {
+        if (!confirm('Are you sure you want to delete this subscriber?')) return;
+        
+        fetch(`/subscribers/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ ' + data.message);
+                window.location.reload();
+            } else {
+                alert('❌ ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Failed to delete subscriber');
+        });
+    }
+    
+    // Edit Subscriber
     function editSubscriber(id) {
         fetch(`/subscribers/${id}/edit`, {
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' }
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 const sub = data.subscriber;
-                document.getElementById('edit_id_val').value = sub.id;
+                document.getElementById('edit_id').value = sub.id;
                 document.querySelector('#addSubscriberForm input[name="email"]').value = sub.email;
                 document.querySelector('#addSubscriberForm input[name="first_name"]').value = sub.first_name || '';
                 document.querySelector('#addSubscriberForm input[name="last_name"]').value = sub.last_name || '';
                 document.querySelector('#addSubscriberForm select[name="status"]').value = sub.status;
                 document.querySelector('#addSubscriberForm select[name="list_id"]').value = sub.list_id;
+                
                 document.getElementById('modalTitle').textContent = 'Edit Subscriber';
-                document.getElementById('modalAddBtn').textContent = 'Update Subscriber';
+                document.getElementById('addBtn').textContent = 'Update Subscriber';
+                
                 document.getElementById('addModal').classList.remove('modal-hidden');
+            } else {
+                alert('❌ ' + data.message);
             }
-        });
-    }
-    
-    function deleteSubscriber(id) {
-        if (!confirm('Delete this subscriber?')) return;
-        fetch(`/subscribers/${id}`, {
-            method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) window.location.reload();
-            else alert(data.message);
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Failed to load subscriber data');
         });
     }
     
+    // Filter functions
     function filterByStatus(status) {
         const url = new URL(window.location.href);
-        status === 'all' ? url.searchParams.delete('status') : url.searchParams.set('status', status);
+        if (status === 'all') {
+            url.searchParams.delete('status');
+        } else {
+            url.searchParams.set('status', status);
+        }
         window.location.href = url.toString();
     }
     
     function filterByList(listId) {
         const url = new URL(window.location.href);
-        listId === 'all' ? url.searchParams.delete('list_id') : url.searchParams.set('list_id', listId);
+        if (listId === 'all') {
+            url.searchParams.delete('list_id');
+        } else {
+            url.searchParams.set('list_id', listId);
+        }
         window.location.href = url.toString();
     }
     
+    // Search functionality
     document.getElementById('searchInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             const searchTerm = this.value.trim();
-            const url = new URL(window.location.href);
-            searchTerm ? url.searchParams.set('search', searchTerm) : url.searchParams.delete('search');
-            window.location.href = url.toString();
+            if (searchTerm) {
+                const url = new URL(window.location.href);
+                url.searchParams.set('search', searchTerm);
+                window.location.href = url.toString();
+            }
         }
     });
     
+    // Close modals on ESC
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeAddModal();
             closeImportModal();
         }
     });
-    
+
+    // Initialize on load
     document.addEventListener('DOMContentLoaded', function() {
         initThemeToggle();
+        
+        // Highlight active sidebar link
         const currentPath = window.location.pathname;
-        document.querySelectorAll('.nav-link').forEach(link => {
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        navLinks.forEach(link => {
             link.classList.remove('active');
-            if (link.getAttribute('href') === currentPath) link.classList.add('active');
+            const href = link.getAttribute('href');
+            if (href === currentPath || 
+                (href !== '/' && currentPath.startsWith(href.replace(/\/$/, '')))) {
+                link.classList.add('active');
+            }
         });
     });
     </script>
